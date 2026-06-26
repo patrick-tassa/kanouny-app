@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Kanouny</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#9A6B0F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Kanouny">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --g:#9A6B0F;--g1:#F5EDD6;--g2:#EDD9A3;--g3:#C49A3C;--gd:#5C3D08;
+  --bg:#FDFAF4;--sep:#E8DCC8;--sep2:#D4C4A0;
+  --t1:#1a1208;--t2:#5a4a2a;--t3:#9a8a6a;
+  --card:#ffffff;--card2:#f5f0e8
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#1a1208;--card:#261a08;--card2:#1e1206;
+  --sep:#3a2810;--sep2:#4a3820;
+  --t1:#f5edd6;--t2:#c4a060;--t3:#7a6040;
+  --g1:#2a1e0e;--g2:#3a2810;--gd:#edd9a3
+}}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+
+/* ── STACK DE PAGES (slide) ── */
+.app{position:fixed;inset:0;overflow:hidden;background:var(--bg)}
+.screen{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column;transition:transform .3s cubic-bezier(.4,0,.2,1);will-change:transform}
+.screen.offright{transform:translateX(100%)}
+.screen.offleft{transform:translateX(-30%)}
+
+/* ── TOPBAR ── */
+.topbar{padding:max(env(safe-area-inset-top),12px) 14px 10px;background:var(--bg);border-bottom:0.5px solid var(--sep);display:flex;align-items:center;gap:10px;flex-shrink:0;z-index:5}
+.appname{font-family:'Crimson Pro',Georgia,serif;font-size:22px;font-weight:500;color:var(--t1)}
+.appname em{color:var(--g);font-style:normal}
+.back-btn{width:32px;height:32px;border-radius:50%;border:none;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t2);flex-shrink:0}
+.topbar-title{flex:1;font-size:16px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-check{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--sep2);background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .2s}
+.topbar-check.done{background:var(--g);border-color:var(--g)}
+
+/* ── DATE NAV ── */
+.date-nav{display:flex;align-items:center;gap:6px;flex:1;justify-content:flex-end}
+.nav-arr{width:28px;height:28px;border-radius:50%;border:0.5px solid var(--sep2);background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t2)}
+.date-pill{background:var(--g1);border:0.5px solid var(--g2);border-radius:20px;padding:4px 10px;cursor:pointer;text-align:center}
+.pill-greg{font-size:11px;font-weight:600;color:var(--gd)}
+.pill-cop{font-size:10px;color:var(--g);margin-top:1px}
+
+/* ── SCROLL ── */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 80px)}
+.scroll.no-nav{padding-bottom:env(safe-area-inset-bottom,0px)}
+.scroll::-webkit-scrollbar{display:none}
+
+/* ── ACCUEIL ── */
+.streak-card{margin:12px 14px;background:var(--g1);border:0.5px solid var(--g2);border-radius:16px;padding:14px;display:flex;align-items:center;gap:14px}
+.snum{font-family:'Crimson Pro',Georgia,serif;font-size:38px;font-weight:500;color:var(--g);line-height:1}
+.wdots{display:flex;gap:5px;margin-top:8px}
+.wd{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600}
+.wd.d{background:var(--g);color:#fff}.wd.t{background:var(--g1);border:2px solid var(--g2);color:var(--gd)}.wd.e{background:var(--card2);color:var(--t3)}
+.prog-wrap{margin:0 14px 6px}
+.prog-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--t3);margin-bottom:5px}
+.prog-track{height:6px;background:var(--card2);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:var(--g3);border-radius:3px;transition:width .4s}
+.today-btn{display:inline-flex;align-items:center;gap:5px;margin:0 14px 8px;border:0.5px solid var(--sep2);border-radius:20px;padding:5px 14px;font-size:12px;color:var(--t2);background:var(--card2);cursor:pointer}
+
+/* ── CARTES SECTION ACCUEIL ── */
+.section-cards{margin:10px 14px 0}
+.sec-label{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px;margin-top:14px}
+.sec-card{background:var(--card);border:0.5px solid var(--sep);border-radius:16px;overflow:hidden;margin-bottom:8px;cursor:pointer;active:scale(.98);transition:opacity .15s}
+.sec-card:active{opacity:.8}
+.sec-card-hdr{padding:14px;display:flex;align-items:center;gap:14px}
+.sec-card-ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sec-card-title{font-size:15px;font-weight:600;color:var(--t1)}
+.sec-card-sub{font-size:12px;color:var(--t3);margin-top:2px}
+.sec-card-prog{margin:0 14px 12px;background:var(--card2);border-radius:3px;height:4px;overflow:hidden}
+.sec-card-fill{height:100%;background:var(--g3);border-radius:3px;transition:width .3s}
+.sec-card-badge{margin-left:auto;font-size:11px;font-weight:700;padding:3px 9px;border-radius:12px;flex-shrink:0}
+.badge-done{background:var(--g1);color:var(--gd)}
+.badge-todo{background:var(--card2);color:var(--t3)}
+
+/* ── LISTE ITEMS (2e écran) ── */
+.items-list{margin:12px 0 0}
+.item-row{display:flex;align-items:center;gap:14px;padding:13px 16px;background:var(--card);border-bottom:0.5px solid var(--sep);cursor:pointer;transition:background .15s}
+.item-row:first-child{border-top:0.5px solid var(--sep)}
+.item-row:active{background:var(--card2)}
+.item-row.done-row{background:rgba(154,107,15,.05)}
+.item-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.item-label{flex:1}
+.item-title{font-size:14px;font-weight:600;color:var(--t1)}
+.item-sub{font-size:11px;color:var(--t3);margin-top:2px}
+.item-check{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--sep2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;flex-shrink:0}
+.item-check.done{background:var(--g);border-color:var(--g)}
+.item-chevron{color:var(--sep2);flex-shrink:0}
+
+/* ── PAGE LECTURE (3e écran) ── */
+.reading-body{padding:20px 18px;max-width:600px}
+.reading-comm{font-size:13px;color:var(--gd);font-style:italic;font-family:'Crimson Pro',Georgia,serif;margin-bottom:16px;padding-bottom:16px;border-bottom:0.5px solid var(--sep)}
+.reading-step{margin-bottom:20px}
+.reading-step-title{font-size:10px;font-weight:700;color:var(--g3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.reading-text{font-family:'Crimson Pro',Georgia,serif;font-size:18px;color:var(--t1);line-height:1.9;white-space:pre-line}
+.reading-ref{font-size:11px;font-weight:700;color:var(--g3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;margin-top:16px}
+.reading-verset p{font-family:'Crimson Pro',Georgia,serif;font-size:18px;color:var(--t1);line-height:1.9;margin-bottom:4px}
+.vnum{font-size:11px;font-weight:700;color:var(--g3);vertical-align:super;margin-right:3px;font-family:-apple-system,sans-serif}
+.reading-concl{font-size:13px;font-weight:600;color:var(--g);font-style:italic;text-align:right;margin-top:12px;padding-top:12px;border-top:0.5px solid var(--sep)}
+.done-cta{position:sticky;bottom:0;background:var(--bg);padding:14px 18px;padding-bottom:max(env(safe-area-inset-bottom),14px);border-top:0.5px solid var(--sep)}
+.done-btn{width:100%;padding:14px;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s}
+.done-btn.undone{background:var(--g);color:#fff}
+.done-btn.done{background:var(--g1);color:var(--gd);border:1.5px solid var(--g2)}
+
+/* ── SYNAXAIRE ── */
+.saint-card{background:var(--card);border-radius:16px;margin:12px 14px;border:0.5px solid var(--sep);overflow:hidden}
+.saint-hdr{display:flex;align-items:flex-start;gap:14px;padding:14px;cursor:pointer}
+.saint-ico{width:42px;height:42px;border-radius:50%;background:var(--g1);border:0.5px solid var(--g2);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--g)}
+.saint-name{flex:1;font-size:14px;font-weight:600;color:var(--t1);line-height:1.4;margin-top:2px}
+.saint-body{padding:0 18px 16px}
+.saint-para{font-family:'Crimson Pro',Georgia,serif;font-size:16px;color:var(--t1);line-height:1.85;margin-bottom:12px}
+.saint-para:last-child{margin-bottom:0}
+
+/* ── PICKER ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;display:flex;align-items:flex-start;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.show{opacity:1;pointer-events:all}
+.picker{background:var(--bg);border-radius:0 0 20px 20px;padding:16px 18px 20px;width:100%;transform:translateY(-100%);transition:transform .25s;border-bottom:0.5px solid var(--sep)}
+.overlay.show .picker{transform:translateY(0)}
+.picker-title{font-size:14px;font-weight:600;color:var(--t1);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.picker-close{width:28px;height:28px;border-radius:50%;border:0.5px solid var(--sep2);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t2)}
+.picker-tabs{display:flex;gap:8px;margin-bottom:12px}
+.ptab{flex:1;padding:7px;border-radius:10px;border:0.5px solid var(--sep2);background:var(--card2);font-size:12px;font-weight:600;color:var(--t2);cursor:pointer;text-align:center}
+.ptab.active{background:var(--g1);border-color:var(--g2);color:var(--gd)}
+.picker-greg{display:none}.picker-cop{display:none}
+.picker-greg.show,.picker-cop.show{display:block}
+.greg-row{display:flex;gap:8px;margin-bottom:12px}
+.greg-row label{font-size:10px;color:var(--t3);margin-bottom:4px;display:block;font-weight:700;text-transform:uppercase}
+.picker-sel{width:100%;padding:8px;border-radius:12px;border:0.5px solid var(--sep2);background:var(--card2);color:var(--t1);font-size:14px;outline:none}
+.cop-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.cop-month-btn{padding:8px 2px;border-radius:10px;border:0.5px solid var(--sep2);background:var(--card2);font-size:11px;font-weight:600;color:var(--t2);cursor:pointer;text-align:center;transition:all .15s}
+.cop-month-btn.sel{background:var(--g1);border-color:var(--g2);color:var(--gd)}
+.cop-bot{display:flex;gap:10px;align-items:flex-end;margin-bottom:12px}
+.cop-bot label{font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px}
+.apply-btn{width:100%;padding:12px;background:var(--g);color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer}
+
+/* ── NAV ── */
+.nav{border-top:0.5px solid var(--sep);display:flex;background:var(--bg);padding:6px 10px;padding-bottom:max(env(safe-area-inset-bottom),10px);gap:4px;flex-shrink:0}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:10px;font-weight:600;padding:6px 4px;background:none;border:none;border-radius:12px;color:var(--t3);transition:all .15s}
+.ni.active{color:var(--gd)}
+.ni .ni-ico{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.ni.active .ni-ico{background:var(--g1)}
+.ni i{font-size:22px}
+
+/* ── PARAMÈTRES ── */
+.param-intro{padding:22px 16px 12px}
+.param-intro h2{font-family:'Crimson Pro',Georgia,serif;font-size:24px;color:var(--t1);font-weight:400;margin-bottom:6px}
+.param-intro p{font-size:13px;color:var(--t2);line-height:1.5}
+.glbl{padding:6px 16px 7px;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.09em}
+.pcard{margin:0 14px 10px;background:var(--card);border:0.5px solid var(--sep);border-radius:16px;overflow:hidden}
+.prow{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:0.5px solid var(--sep);transition:background .15s}
+.prow:last-child{border-bottom:none}
+.prow.off{background:var(--card2)}
+.pico{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .2s}
+.plbl{flex:1;transition:opacity .2s}
+.plbl-name{font-size:13px;font-weight:600;color:var(--t1)}
+.plbl-sub{font-size:11px;color:var(--t3);margin-top:2px}
+.prow.off .pico,.prow.off .plbl{opacity:.3}
+.tw{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.tl{font-size:11px;font-weight:700;min-width:40px;text-align:right;transition:color .15s}
+.tl.on{color:var(--g)}.tl.off{color:var(--sep2)}
+.tog{width:46px;height:28px;border-radius:14px;border:none;cursor:pointer;position:relative;transition:background .2s;outline:none;background:var(--sep2);flex-shrink:0}
+.tog.on{background:var(--g)}
+.tog::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.tog.on::after{transform:translateX(18px)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 80px);left:50%;transform:translateX(-50%);background:#1a1208;color:#fff;font-size:13px;padding:10px 18px;border-radius:24px;display:flex;align-items:center;gap:8px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;z-index:200}
+.toast.show{opacity:1}
+
+/* ── NAV GLOBALE FIXED ── */
+.nav-global{position:fixed;bottom:0;left:0;right:0;border-top:0.5px solid var(--sep);display:flex;background:var(--bg);padding:6px 10px;padding-bottom:max(env(safe-area-inset-bottom),10px);gap:4px;z-index:50;max-width:430px;margin:0 auto}
+/* Padding bottom pour laisser la place à la nav */
+.screen .scroll{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 80px) !important}
+/* Screens sans nav (lecture) */
+.screen.no-bottom-nav .scroll{padding-bottom:env(safe-area-inset-bottom,0px) !important}
+
+.reading-screen .scroll{padding-bottom:0 !important}
+
+/* ── PARAMÈTRES : jours de la semaine ── */
+.next-conf-banner{margin:0 14px 8px;background:var(--g1);border:0.5px solid var(--g2);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px}
+.next-conf-ico{width:36px;height:36px;border-radius:10px;background:var(--g);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff}
+.date-input{font-size:13px;padding:5px 9px;border-radius:9px;border:0.5px solid var(--sep2);background:var(--card2);color:var(--t1);outline:none}
+.step-btn{width:30px;height:30px;border-radius:8px;border:0.5px solid var(--sep2);background:var(--card2);font-size:18px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t1);line-height:1}
+.step-btn:active{background:var(--g1)}
+.step-val{font-size:15px;font-weight:700;color:var(--g);min-width:24px;text-align:center}
+/* Carte item avec jours */
+.item-card{margin:0 14px 6px;background:var(--card);border:0.5px solid var(--sep);border-radius:14px;overflow:hidden}
+.item-hdr{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;user-select:none}
+.item-hdr:active{background:var(--card2)}
+.days-panel{border-top:0.5px solid var(--sep);padding:14px 14px 16px;background:var(--card2)}
+.days-label{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
+.days-grid{display:flex;gap:6px}
+.day-btn{flex:1;aspect-ratio:1;border-radius:50%;border:2px solid var(--sep2);background:var(--card);font-size:12px;font-weight:700;color:var(--t3);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;position:relative}
+.day-btn.on{background:var(--g);border-color:var(--g);color:#fff;box-shadow:0 2px 8px rgba(154,107,15,.35)}
+.day-btn.today::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--g3)}
+.day-btn.on.today::after{background:rgba(255,255,255,.7)}
+.day-btn:active{transform:scale(.92)}
+.days-shortcuts{display:flex;gap:6px;margin-top:12px}
+.shortcut-btn{flex:1;font-size:11px;font-weight:600;padding:7px 4px;border-radius:9px;border:0.5px solid var(--sep2);background:var(--card);color:var(--t2);cursor:pointer;text-align:center;transition:all .15s}
+.shortcut-btn:active,.shortcut-btn.active-sc{background:var(--g1);border-color:var(--g2);color:var(--gd)}
+.item-days-preview{font-size:11px;color:var(--t3);margin-top:2px}
+
+/* ═══════════════════════════════════════════════════════════════
+   LAYOUT DESKTOP (≥ 768px)
+═══════════════════════════════════════════════════════════════ */
+@media (min-width: 768px) {
+  html, body { background: var(--bg); height: 100%; overflow: hidden; }
+
+  /* Wrapper global centré */
+  .desktop-shell {
+    display: flex;
+    height: 100vh;
+    max-width: 1100px;
+    margin: 0 auto;
+    gap: 0;
+  }
+
+  /* Sidebar gauche fixe */
+  .desktop-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 32px 24px;
+    border-right: 0.5px solid var(--sep);
+    background: var(--bg);
+  }
+
+  /* Contenu principal (l'app mobile centrée) */
+  .desktop-main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    padding: 0 40px;
+    overflow: hidden;
+  }
+
+  /* L'app garde sa largeur mobile */
+  .app {
+    width: 390px;
+    flex-shrink: 0;
+    border-left: 0.5px solid var(--sep);
+    border-right: 0.5px solid var(--sep);
+    border-radius: 0;
+    position: relative;
+    height: 100vh;
+  }
+
+  /* Masquer la nav mobile en bas (remplacée par la sidebar) */
+  .nav-global { display: none !important; }
+
+  /* Sidebar nav items */
+  .sb-logo {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--t1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 40px;
+  }
+  .sb-logo em { color: var(--g); font-style: normal; }
+
+  .sb-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+
+  .sb-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--t2);
+    border: none;
+    background: none;
+    text-align: left;
+    transition: background .15s, color .15s;
+  }
+  .sb-item:hover { background: var(--g1); color: var(--gd); }
+  .sb-item.active { background: var(--g1); color: var(--gd); font-weight: 600; }
+  .sb-item i { font-size: 20px; width: 24px; text-align: center; }
+
+  .sb-divider { height: 0.5px; background: var(--sep); margin: 12px 0; }
+
+  .sb-user {
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--card2);
+    border: 0.5px solid var(--sep);
+  }
+  .sb-user-email { font-size: 12px; font-weight: 600; color: var(--t1); margin-bottom: 2px; }
+  .sb-user-sub { font-size: 11px; color: var(--t3); }
+
+  /* Panneau droit informatif */
+  .desktop-right {
+    width: 240px;
+    flex-shrink: 0;
+    padding: 32px 24px;
+    border-left: 0.5px solid var(--sep);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .dr-card {
+    background: var(--card);
+    border: 0.5px solid var(--sep);
+    border-radius: 14px;
+    padding: 14px;
+  }
+  .dr-title { font-size: 11px; font-weight: 700; color: var(--t3); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px; }
+  .dr-verse { font-family: 'Crimson Pro', Georgia, serif; font-size: 15px; color: var(--t1); line-height: 1.7; font-style: italic; }
+  .dr-ref { font-size: 11px; color: var(--g); margin-top: 8px; font-weight: 600; }
+
+  .dr-streak { display: flex; align-items: center; gap: 10px; }
+  .dr-streak-num { font-family: 'Crimson Pro', Georgia, serif; font-size: 36px; font-weight: 500; color: var(--g); line-height: 1; }
+  .dr-streak-lbl { font-size: 12px; color: var(--t2); }
+
+  /* Scroll dans l'app desktop */
+  .screen .scroll { max-height: calc(100vh - 60px); }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Tablet : sidebar + app, pas de panneau droit */
+  .desktop-right { display: none; }
+  .desktop-sidebar { width: 220px; }
+}
+
+@media (max-width: 767px) {
+  .desktop-sidebar, .desktop-right { display: none; }
+  .desktop-shell, .desktop-main { display: contents; }
+}
+
+</style>
+</head>
+<body>
+<div class="desktop-shell">
+  <!-- Sidebar gauche -->
+  <aside class="desktop-sidebar" id="desktopSidebar" style="display:none">
+    <div class="sb-logo">
+K<em>a</em>nouny
+    </div>
+    <nav class="sb-nav">
+      <button class="sb-item active" id="sb-today" onclick="goHome()">
+        <i class="ti ti-home"></i> Aujourd'hui
+      </button>
+      <button class="sb-item" id="sb-params" onclick="goParams()">
+        <i class="ti ti-settings"></i> Paramètres
+      </button>
+    </nav>
+    <div class="sb-divider"></div>
+    <div class="sb-user" id="sb-user" style="display:none">
+      <div class="sb-user-email" id="sb-email">—</div>
+      <div class="sb-user-sub">Synchronisé</div>
+    </div>
+  </aside>
+
+  <!-- App mobile centrée -->
+  <div class="desktop-main">
+    <div class="app" id="app">
+
+  <!-- ══ ÉCRAN 1 : ACCUEIL ══ -->
+  <div class="screen" id="screen-home">
+    <div class="topbar">
+      <div class="appname">K<em>a</em>nouny</div>
+<div class="date-nav">
+        <button class="nav-arr" onclick="shiftDay(-1)"><i class="ti ti-chevron-left" style="font-size:16px"></i></button>
+        <div class="date-pill" onclick="openPicker()">
+          <div class="pill-greg" id="pillGreg"></div>
+          <div class="pill-cop" id="pillCop"></div>
+        </div>
+        <button class="nav-arr" onclick="shiftDay(1)"><i class="ti ti-chevron-right" style="font-size:16px"></i></button>
+      </div>
+    </div>
+    <div class="scroll" id="homeScroll">
+      <div class="streak-card">
+        <div style="font-size:32px;line-height:1">☀</div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <div class="snum" id="streakNum">0</div>
+            <div><div style="font-size:14px;font-weight:600;color:var(--gd)" id="streakLabel">jours de suite</div><div style="font-size:12px;color:var(--g);margin-top:1px" id="streakSub">Commence aujourd'hui !</div></div>
+          </div>
+          <div class="wdots" id="weekDots"></div>
+        </div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-meta"><span>Progression du jour</span><span id="progTxt">0 / 0</span></div>
+        <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+      </div>
+      <div id="todayReturnWrap"></div>
+      <div class="section-cards" id="homeSections"></div>
+    </div>
+  </div>
+
+  <!-- ══ ÉCRAN 2 : LISTE ══ -->
+  <div class="screen offright" id="screen-list">
+    <div class="topbar">
+      <button class="back-btn" onclick="goBack()"><i class="ti ti-chevron-left" style="font-size:22px"></i></button>
+      <div class="topbar-title" id="listTitle">—</div>
+    </div>
+    <div class="scroll" id="listScroll">
+      <div id="listContent"></div>
+    </div>
+  </div>
+
+  <!-- ══ ÉCRAN 3 : LECTURE ══ -->
+  <div class="screen offright reading-screen" id="screen-reading">
+    <div class="topbar">
+      <button class="back-btn" onclick="goBackToList()"><i class="ti ti-chevron-left" style="font-size:22px"></i></button>
+      <div class="topbar-title" id="readingTitle">—</div>
+      <button class="topbar-check" id="readingCheck" onclick="toggleCurrentDone()"><i class="ti ti-check" style="font-size:16px;color:transparent" id="readingCheckIcon"></i></button>
+    </div>
+    <div class="scroll no-nav" id="readingScroll">
+      <div class="reading-body" id="readingBody"></div>
+    </div>
+    <div class="done-cta" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 80px)">
+      <button class="done-btn undone" id="doneCta" onclick="toggleCurrentDone()">
+        <i class="ti ti-check" style="font-size:18px"></i>
+        <span id="doneCtaLabel">Marquer comme lu</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ ÉCRAN PARAMÈTRES ══ -->
+  <div class="screen offright" id="screen-params">
+    <div class="topbar">
+      <button class="back-btn" onclick="goBack()"><i class="ti ti-chevron-left" style="font-size:22px"></i></button>
+      <div class="topbar-title">Paramètres</div>
+    </div>
+    <div class="scroll">
+      <div class="param-intro"><h2>Paramètres</h2><p>Choisis ce qui s'affiche et quand.</p></div>
+
+      <!-- Confession -->
+      <div class="glbl">Confession</div>
+      <div class="next-conf-banner" id="nextConfBanner" style="display:none">
+        <div class="next-conf-ico"><i class="ti ti-cross" style="font-size:18px"></i></div>
+        <div>
+          <div style="font-size:12px;color:var(--t3)">Prochaine confession</div>
+          <div style="font-size:14px;font-weight:700;color:var(--gd)" id="nextConfDate">—</div>
+          <div style="font-size:11px;color:var(--g)" id="nextConfDays"></div>
+        </div>
+      </div>
+      <div class="pcard" id="conf-pcard">
+        <div class="prow" style="padding:12px 14px">
+          <div class="plbl"><div class="plbl-name">Dernière confession</div></div>
+          <input type="date" class="date-input" id="lastConfDate" onchange="updateConf()">
+        </div>
+        <div class="prow" style="padding:12px 14px">
+          <div class="plbl">
+            <div class="plbl-name">Rappel tous les</div>
+            <div class="plbl-sub" id="freqSub">Toutes les 4 semaines</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button class="step-btn" onclick="changeFreq(-1)">−</button>
+            <div class="step-val" id="freqVal">4</div>
+            <button class="step-btn" onclick="changeFreq(1)">+</button>
+          </div>
+          <div style="font-size:11px;color:var(--t3);margin-left:4px">sem.</div>
+        </div>
+        <div class="prow" style="padding:12px 14px">
+          <div class="plbl"><div class="plbl-name">Activer le rappel</div></div>
+          <button class="tog on" id="confTog" onclick="this.classList.toggle('on');updateConf()"></button>
+        </div>
+      </div>
+
+      <!-- Agpeya -->
+      <div class="glbl">Agpeya</div>
+      <div id="agpeya-pcard"></div>
+      <!-- Lectionnaire -->
+      <div class="glbl">Lectionnaire</div>
+      <div id="lect-pcard"></div>
+      <!-- Autres -->
+      <div class="glbl">Autres</div>
+      <div id="autres-pcard"></div>
+    </div>
+  </div>
+
+  <!-- ══ NAV GLOBALE ══ -->
+  <nav class="nav-global" id="globalNav">
+    <button class="ni active" id="nav-today" onclick="goHome()"><div class="ni-ico"><i class="ti ti-home"></i></div><span>Aujourd'hui</span></button>
+    <button class="ni" id="nav-prog" onclick="goParams()"><div class="ni-ico"><i class="ti ti-settings"></i></div><span>Paramètres</span></button>
+  </nav>
+
+    </div><!-- /.app -->
+  </div><!-- /.desktop-main -->
+
+  <!-- Panneau droit -->
+  <aside class="desktop-right" id="desktopRight" style="display:none">
+    <div class="dr-card">
+      <div class="dr-title">Streak</div>
+      <div class="dr-streak">
+        <div class="dr-streak-num" id="sb-streak-num">0</div>
+        <div class="dr-streak-lbl">jours<br>de suite</div>
+      </div>
+    </div>
+    <div class="dr-card">
+      <div class="dr-title">Verset du jour</div>
+      <div class="dr-verse">"Heureux est l'homme qui ne suit pas le conseil des méchants."</div>
+      <div class="dr-ref">Psaume 1</div>
+    </div>
+  </aside>
+</div><!-- /.desktop-shell -->
+
+<!-- PICKER -->
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+  <div class="picker">
+    <div class="picker-title"><span>Choisir une date</span><button class="picker-close" onclick="closePicker()"><i class="ti ti-x" style="font-size:14px"></i></button></div>
+    <div class="picker-tabs"><div class="ptab active" id="tab-greg" onclick="switchTab('greg')">Grégorien</div><div class="ptab" id="tab-cop" onclick="switchTab('cop')">Copte</div></div>
+    <div class="picker-greg show" id="panel-greg">
+      <div class="greg-row">
+        <div style="flex:1"><label>Jour</label><select class="picker-sel" id="g-day"></select></div>
+        <div style="flex:2"><label>Mois</label><select class="picker-sel" id="g-month"></select></div>
+        <div style="flex:1.3"><label>Année</label><select class="picker-sel" id="g-year"></select></div>
+      </div>
+      <button class="apply-btn" onclick="applyGreg()">Voir les lectures</button>
+    </div>
+    <div class="picker-cop" id="panel-cop">
+      <div style="font-size:10px;color:var(--t3);margin-bottom:8px;font-weight:700;text-transform:uppercase">Mois copte</div>
+      <div class="cop-grid" id="cop-months"></div>
+      <div class="cop-bot">
+        <div style="flex:1"><label>Jour</label><select class="picker-sel" id="cop-day"></select></div>
+        <div style="flex:1"><label>Année</label><select class="picker-sel" id="cop-year"></select></div>
+      </div>
+      <button class="apply-btn" onclick="applyCop()">Voir les lectures</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="ti ti-check" style="font-size:14px"></i><span id="toastMsg"></span></div>
+
+<script>const AGPEYA={"prime":{"nom":"Prime","heure":"6h00","commemoration":"Résurrection du Christ au matin","psaumes":[{"titre":"Psaume 1","texte":"Heureux est l'homme\nqui n'entre pas au conseil des méchants,\nqui ne suit pas le chemin des pécheurs,\nne siège pas avec ceux qui ricanent,\nmais se plaît dans la loi du Seigneur\net murmure sa loi jour et nuit !\n\nIl est comme un arbre\nplanté près d'un ruisseau,\nqui donne du fruit en son temps,\net jamais son feuillage ne meurt ;\ntout ce qu'il entreprend réussira,\n\ntel n'est pas le sort des méchants.\nMais ils sont comme la paille\nbalayée par le vent :\nau jugement, les méchants ne se lèveront pas,\nni les pécheurs au rassemblement des justes.\nLe Seigneur connaît le chemin des justes,\nmais le chemin des méchants se perdra. Alléluia !"},{"titre":"Psaume 2","texte":"Pourquoi ce tumulte des nations,\nce vain murmure des peuples ?\nLes rois de la terre se dressent,\nles grands se liguent entre eux\ncontre le Seigneur et son messie :\n*Faisons sauter nos chaînes,\nrejetons ces entraves ! +\n\nCelui qui règne dans les cieux s'en amuse,\nle Seigneur les tourne en dérision ;\npuis il leur parle avec fureur\net sa colère les épouvante :\n* Moi, j'ai sacré mon roi\nsur Sion, ma sainte montagne.+\n\nJe proclame le décret du Seigneur !\nIl m'a dit : * Tu es mon fils ;\nmoi, aujourd'hui, je t'ai engendré.\nDemande, et je te donne en héritage les nations,\npour domaine la terre entière.\nTu les détruiras de ton sceptre de fer,\n\ntu les briseras comme un vase de potier.+\nMaintenant, rois, comprenez,\nreprenez-vous, juges de la terre.\nServez le Seigneur avec crainte,\nrendez-lui votre hommage en tremblant.\nQu'il s'irrite et vous êtes perdus :\nsoudain sa colère éclatera.\nHeureux qui trouve en lui son refuge ! Alléluia !"},{"titre":"Psaume 3","texte":"Seigneur, qu'ils sont nombreux mes adversaires,\nnombreux à se lever contre moi,\nnombreux à déclarer à mon sujet :\n* Pour lui, pas de salut auprès de Dieu !+\n\nMais Toi, Seigneur, mon bouclier,\nma gloire, Tu tiens haute ma tête.\nA pleine voix je crie vers le Seigneur ;\nil me répond de sa montagne sainte.\n\nEt moi, je me couche et je dors ;\nje m'éveille : le Seigneur est mon soutien.\nJe ne crains pas ce peuple nombreux\nqui me cerne et s'avance contre moi.\n\nLève-Toi, Seigneur !\nSauve-moi, mon Dieu !\nTous mes ennemis, Tu les frappes à la mâchoire ;\nles méchants, Tu leur brises les dents\n\nDu Seigneur vient le salut ;\nvienne Ta bénédiction sur Ton peuple ! Alléluia !"},{"titre":"Psaume 5","texte":"Écoute mes paroles, Seigneur,\ncomprends ma plainte ;\nentends ma voix qui T'appelle,\nô mon Roi et mon Dieu !\n\nJe me tourne vers Toi, Seigneur,\nau matin tu écoutes ma voix ;\nau matin, je me prépare pour Toi\net je reste en éveil.\n\nTu n'es pas un Dieu ami du mal,\nchez Toi, le méchant n'est pas reçu,\nNon l'insensé ne tient pas\ndevant Ton regard.\n\nTu détestes tous les malfaisants,\ntu extermines les menteurs ;\nl'homme de ruse et de sang,\nle Seigneur le hait.\n\nPour moi, grâce à Ton amour,\nj'accède à Ta maison ;\nvers Ton temple saint, je me prosterne,\nsaisi de crainte.\n\nSeigneur, que Ta justice me conduise ;\ndes ennemis me guettent :\naplanis devant moi Ton chemin.\n\nRien n'est vrai dans leur bouche,\nils sont remplis de malveillance ;\nleur gosier est un sépulcre béant,\net leur langue un piège.\n\nDieu, traite-les en coupable :\nqu'ils échouent dans leurs projets !\nPour tant de méfaits, disperse-les,\npuisqu'ils Te résistent.\n\nAllégresse pour qui s'abrite en Toi,\njoie éternelle !\nTu les protèges, pour Toi ils exultent,\nceux qui aiment Ton nom.\n\nToi, Seigneur, Tu bénis le juste ;\ndu bouclier de Ta faveur, Tu les couvres. Alléluia !"},{"titre":"Psaume 6","texte":"Seigneur, corrige-moi sans colère,\net reprends-moi sans fureur.\nPitié, Seigneur, je dépéris !\nSeigneur, guéris-moi !\nCar je tremble de tous mes os,\nde toute mon âme, je tremble.\n\nEt Toi, Seigneur, que fais-Tu ?\nReviens, Seigneur, délivre-moi,\nsauve-moi en raison de Ton amour !\nPersonne, dans la mort, n'invoque Ton nom ;\nau séjour des morts, qui Te rends grâce ?\n\nJe m'épuise à force de gémir ;\nchaque nuit, je pleure sur mon lit :\nma couche est trempée de mes larmes.\nMes yeux sont rongés de chagrin ;\nj'ai vieilli parmi tant d'adversaires !\n\nLoin de moi, vous tous, malfaisants,\ncar le Seigneur entend mes sanglots !\nLe Seigneur accueille ma demande,\nle Seigneur entend ma prière.\nQu'ils aient honte et qu'ils tremblent,\ntous mes ennemis,\nqu'ils reculent, soudain, couverts de honte !\n Alléluia !"},{"titre":"Psaume 8","texte":"Ô Seigneur, notre Dieu,\nqu'il est grand Ton nom\npar toute la terre !\nJusqu'aux cieux, Ta splendeur est chantée\npar la bouche des enfants, des tout-petits :\nrempart que Tu opposes à l'adversaire,\noù l'ennemi se brise en sa révolte.\n\nA voir Ton ciel, ouvrage de Tes doigts,\nla lune et les étoiles Tu fixas,\nqu'est-ce que l'homme pour que Tu penses à lui,\nle fils d'un homme, que Tu en prennes souci ?\n\nTu l'as voulu un peu moindre qu'un ange,\nle couronnant de gloire et d'honneur ;\nTu l'établis sur les œuvres de Tes mains,\nTu mets toute chose à ses pieds :\n\nles troupeaux de bœufs et de brebis,\net même les bêtes sauvages,\nles oiseaux du ciel et les poissons de la mer,\ntout ce qui va son chemin dans les eaux.\n\nÔ Seigneur, notre Dieu,\nqu'il est grand Ton nom\npar toute la terre ! Alléluia !"},{"titre":"Psaume 11","texte":"Seigneur, au secours ! Il n'y a plus de fidèle !\nLa loyauté a disparu chez les hommes.\nEntre eux la parole est mensonge,\ncœur double, lèvres menteuses.\nQue le Seigneur supprime ces lèvres menteuses,\ncette langue qui parle insolemment,\nceux-là qui disent : *Armons notre langue !\nA nous la parole ! Qui sera notre maître ?+\n\n*Pour le pauvre qui gémit,\n\nle malheureux que l'on dépouille,\nmaintenant Je me lève, dit le Seigneur ;\nà celui qu'on méprise, Je porte secours.+\n\nLes paroles du Seigneur sont des paroles pures,\nargent passé au feu, affiné sept fois.\nToi, Seigneur, Tu tiens parole,\nTu nous gardes pour toujours de cette engeance.\n\nDe tous côtés, s'agitent les impies :\nla corruption gagne chez les hommes. Alléluia !"},{"titre":"Psaume 12","texte":"Combien de temps, Seigneur, vas-Tu m'oublier,\ncombien de temps, me cacher Ton visage ?\nCombien de temps aurai-je l'âme en peine\net le cœur attristé chaque jour ?\nCombien de temps mon ennemi sera-t-il plus fort ?\n\nRegarde, réponds-moi, Seigneur mon Dieu !\nDonne la lumière à mes yeux,\ngarde-moi du sommeil de la mort ;\n\nque l'adversaire ne crie pas : *Victoire !+\nque l'ennemi n'ait pas la joie de ma défaite !\n\nMoi, je prends appui sur Ton amour ;\nque mon cœur ait la joie de Ton salut !\nJe chanterai le Seigneur pour le bien qu'il m'a fait.\n Alléluia !"},{"titre":"Psaume 15","texte":"Garde-moi, mon Dieu :\nj'ai fait de Toi mon refuge.\nJ'ai dit au Seigneur : *Tu es mon Dieu !\nJe n'ai pas d'autre bonheur que Toi.+\n\nToutes les idoles du pays,\nces dieux que j'aimais,\nne cessent d'étendre leurs ravages,\net l'on se rue à leur suite.\nJe n'irai pas leur offrir le sang des sacrifices ;\nleur nom ne viendra pas sur mes lèvres !\n\nSeigneur, mon partage et ma coupe :\nde Toi dépend mon sort.\nLa part qui me revient fait mes délices ;\nj'ai même le plus bel héritage !\n\nJe bénis le Seigneur qui me conseille :\nmême la nuit mon cœur m'avertit.\nJe garde le Seigneur devant moi sans relâche ;\nil est à ma droite : je suis inébranlable.\n\nMon cœur exulte, mon âme est en fête,\nma chair elle-même repose en confiance :\nTu ne peux m'abandonner à la mort\nni laisser Ton ami voir la corruption.\n\nTu m'apprends le chemin de la vie :\ndevant Ta face, débordement de joie !\nA Ta droite, éternité de délices ! Alléluia !"},{"titre":"Psaume 18","texte":"Les cieux proclament la gloire de Dieu,\nle firmament raconte l'ouvrage de Ses mains.\n\nLe jour au jour en livre le récit\net la nuit à la nuit en donne connaissance.\n\nPas de paroles dans ce récit,\npas de voix qui s'entende ;\nmais sur toute la terre en paraît le message\net la nouvelle, aux limites du monde.\n\nLà, se trouve la demeure du soleil :\ntel un époux, il paraît hors de sa tente,\nil s'élance en conquérant joyeux.\n\nIl paraît où commence le ciel,\nil s'en va jusqu'où le ciel s'achève :\nrien n'échappe à son ardeur.\n\nLa loi du Seigneur est parfaite,\nqui redonne vie ;\nla charte du Seigneur est sûre,\nqui rend sage les simples.\n\nLes préceptes du Seigneur sont droits,\nils réjouissent le cœur ;\nle commandement du Seigneur est limpide,\nil clarifie le regard.\n\nLa crainte qu'il inspire est pure,\nelle est là pour toujours ;\nles décisions du Seigneur sont justes\net vraiment équitables :\n\nplus désirables que l'or,\nqu'une masse d'or fin,\n\nplus savoureuses que le miel\nqui coule des rayons.\n\nAussi Ton serviteur en est illuminé ;\nà les garder, il trouve son profit.\nQui peut discerner ses erreurs ?\nPurifie-moi de celles qui m'échappent.\n\nPréserve aussi Ton serviteur de l'orgueil :\nqu'il n'ait sur moi aucune emprise.\nAlors je serai sans reproche,\npur d'un grand péché.\n\nAccueille les paroles de ma bouche,\nle murmure de mon cœur ;\nqu'ils parviennent devant Toi,\nSeigneur, mon rocher, mon défenseur !\n Alléluia !"},{"titre":"Psaume 26","texte":"Le Seigneur est ma lumière et mon salut ;\nde qui aurais-je crainte ?\nLe Seigneur est le rempart de ma vie ;\ndevant qui tremblerais-je ?\n\nSi des méchants s'avancent contre moi\npour me déchirer,\nce sont eux, mes ennemis, mes adversaires,\nqui perdent pied et succombent.\n\nQu'une armée se déploie devant moi\npour me déchirer,\nce sont eux, mes ennemis, mes adversaires,\nqui perdent pied et succombent.\n\nQu'une armée se déploie devant moi,\nmon cœur est sans crainte ;\nque la bataille s'engage contre moi,\nje garde confiance.\n\nJ'ai demandé une chose au Seigneur,\nla seule que je cherche :\nhabiter la maison du Seigneur\ntous les jours de ma vie,\npour admirer le Seigneur dans sa beauté\net m'attacher à son temple.\n\nOui, il me réserve un lieu sûr\nau jour du malheur ;\nil me cache au plus secret de sa tente,\nil m'élève sur le roc.\nMaintenant je relève la tête\ndevant mes ennemis.\n\nJ'irai célébrer dans sa tente\nle sacrifice d'ovation ;\nje chanterai, je fêterai le Seigneur.\n\nÉcoute, Seigneur, je T'appelle !\nPitié ! Réponds moi !\n\nMon cœur m'a redit Ta parole :\n*Cherchez ma face.+\nC'est Ta face, Seigneur, que je cherche\nne me cache pas Ta face\n\nN'écarte pas ton serviteur avec colère :\nTu restes mon secours.\nNe me laisse pas, ne m'abandonne pas,\nDieu, mon salut !\nMon père et ma mère m'abandonnent ;\nle Seigneur me reçoit.\n\nEnseigne-moi ton chemin, Seigneur,\nconduis-moi par des routes sûres,\nmalgré ceux qui me guettent\n\nNe me livre pas à la merci de l'adversaire :\ncontre moi se sont levés de faux témoins\nqui soufflent la violence.\n\nMais j'en suis sûr, je verrai les bontés du Seigneur\nsur la terre des vivants.\n*Espère le Seigneur, sois fort et prends courage ;\nespère le Seigneur.+ Alléluia !"},{"titre":"Psaume 62","texte":"Dieu, Tu es mon Dieu, je Te cherche dès l'aube ;\nmon âme a soif de Toi ;\nauprès de Toi languit ma chair\nterre aride, altérée, sans eau.\n\nJe T'ai contemplé au sanctuaire,\nj'ai vu Ta force et Ta gloire.\nTon amour vaut mieux que la vie :\nTu seras la louange de mes lèvres.\n\nToute ma vie je vais Te bénir,\nlever les mains en invoquant Ton nom.\nComme un festin je serai rassasié ;\nla joie sur les lèvres, je dirai Ta louange.\n\nDans la nuit, je me souviens de Toi\net je reste des heures à Te parler.\nOui, Tu es venu à mon secours ;\nje crie de joie à l'ombre de Tes ailes.\nMon âme s'attache à Toi,\nTa main droite me soutient.\n\nMais ceux qui pourchassent mon âme,\nqu'ils descendent aux profondeurs de la terre,\nqu'on les passe au fil de l'épée,\nqu'ils deviennent la pâture des loups !\nEt le roi se réjouira de son Dieu.\nQui jure par Lui en sera glorifié,\ntandis que l'homme de mensonge\naura la bouche close ! Alléluia !"},{"titre":"Psaume 66","texte":"Que Dieu nous prenne en grâce et nous bénisse,\nQue Son visage s'illumine pour nous ;\net ton chemin sera connu sur toute la terre,\nton salut, parmi toutes les nations.\n\nQue les peuples, Dieu, Te rendent grâce ;\nqu'ils te rendent grâce tous ensemble !\n\nQue les nations chantent leur joie,\ncar Tu gouvernes le monde avec justice ;\nTu gouvernes les peuples avec droiture,\nsur la terre, Tu conduis les nations.\n\nQue les peuples, Dieu, Te rendent grâce ;\nqu'ils te rendent grâce tous ensemble !\n\nLa terre a donné son fruit ;\nDieu, notre Dieu, nous bénit.\n\nQue Dieu nous bénisse,\net que la terre tout entière L'adore ! Alléluia !"},{"titre":"Psaume 69","texte":"Mon Dieu viens me délivrer ;\nSeigneur, viens vite à mon secours !\nQu'ils soient humiliés, déshonorés,\nceux qui s'en prennent à ma vie !\n\nQu'ils reculent, couverts de honte,\nceux qui cherchent mon malheur ;\nque l'humiliation les écrase,\nceux qui me disent : *C'est bien fait !+\n\nMais tu seras l'allégresse et la joie\nde tous ceux qui te cherchent ;\ntoujours ils rediront : *Dieu est Grand !+\nceux qui aiment ton salut.\n\nJe suis pauvre et malheureux,\nmon Dieu, viens vite !\nTu es mon secours, mon libérateur :\nSeigneur, ne tarde pas ! Alléluia !"},{"titre":"Psaume 112","texte":"Louez, serviteurs du Seigneur,\nlouez le nom du Seigneur !\nBéni soit le nom du Seigneur,\nmaintenant et pour les siècles des siècles !\nDu levant au couchant du soleil\nloué soit le nom du Seigneur !\n\nLe Seigneur domine tous les peuples,\nsa gloire domine les cieux.\nQui est semblable au Seigneur notre Dieu ?\nLui, Il siège là-haut.\nMais Il abaisse Son regard\nvers le ciel et vers la terre.\n\nDe la poussière Il relève le faible,\nIl retire le pauvre de la cendre\npour qu'il siège parmi les princes,\nparmi les princes de son peuple.\nIl installe en sa maison la femme stérile,\nheureuse mère au milieu de ses fils. Alléluia !"},{"titre":"Psaume 142","texte":"Seigneur entends ma prière ;\ndans Ta justice écoute mes appels,\ndans Ta fidélité réponds-moi.\nN'entre pas en jugement avec Ton serviteur :\naucun vivant n'est juste devant Toi.\n\nL'ennemi cherche ma perte,\nil foule au sol ma vie ;\nil me fait habiter les ténèbres\navec les morts de jadis.\nLe souffle en moi s'épuise,\nmon cœur au fond de moi s'épouvante.\n\nJe me souviens des jours d'autrefois,\nje me redis toutes Tes actions,\nsur l'œuvre de Tes mains je médite.\nJe tends les mains vers Toi,\nme voici devant Toi comme une terre assoiffée.\n\nVite, réponds-moi, Seigneur :\nje suis à bout de souffle !\n\nNe me cache pas Ton visage :\nje serais de ceux qui tombent dans la fosse.\n\nFais que j'entende au matin Ton amour,\ncar je compte sur Toi.\nMontre-moi le chemin que je dois prendre :\nvers Toi, j'élève mon âme !\n\nDélivre-moi de mes ennemis, Seigneur :\nj'ai un abri auprès de Toi.\nApprends-moi à faire ta volonté,\ncar Tu es mon Dieu.\nTon souffle est bienfaisant :\nqu'il me guide en un pays de plaines.\n\nPour l'honneur de Ton nom, Seigneur, fais-moi\nvivre ;\nà cause de Ta justice, tire-moi de la détresse.\nA cause de Ton amour, Tu détruiras mes ennemis ;\ntu feras périr mes adversaires,\ncar je suis Ton serviteur. Alléluia !"}],"evangile":{"reference":"saint Jean ( 1 : 1 - 17 )","texte":"1\n Au commencement était le Verbe, et le Verbe\nétait auprès de Dieu, et le Verbe était Dieu.2 Il était\nau commencement auprès de Dieu. 3 Par Lui, tout\ns'est fait, et rien de ce qui s'est fait ne s'est fait sans\nLui. 4 En Lui était la vie, et la vie était la lumière des\nhommes ; la lumière brille dans les ténèbres, et les\nténèbres ne l'ont pas arrêtée.\n 6\n Il y eut un homme envoyé par Dieu. Son nom\nétait Jean. 7 Il était comme témoin, pour rendre\ntémoignage à la Lumière, afin que tous croient par\nlui. 8 Cet homme n'était pas la Lumière, mais il était\nlà pour lui rendre témoignage.\n 9\n Le Verbe était la vraie Lumière, qui éclaire tout\nhomme en venant dans le monde. 10 Il était dans le\nmonde, Lui par qui le monde s'était fait, mais le\nmonde ne l'as pas reconnu. 11 Il est venu chez les\nsiens, et les siens ne l'ont pas reçu. 12 Mais tous\nceux qui l'ont reçu, ceux qui croient en son nom, il\nleur a donné de pouvoir devenir enfants de Dieu. Ils\nne sont pas nés de la chair et du sang, ni d'une\nvolonté charnelle, ni de la volonté d'un homme : ils\nsont nés de Dieu.\n 14\n Et le verbe s'est fait chair, il a habité parmi\nnous, et nous avons vu sa gloire, la gloire qu'il tient\nde son Père comme Fils unique, plein de grâce et de\nvérité. 15 Jean Baptiste lui rend témoignage en\nproclamant : Voici celui dont j'ai dit : Lui qui vient\nderrière moi, il a pris place devant moi, car avant moi\nil était. + 16 Tous nous avons eu part à sa plénitude,\nnous avons reçu grâce après grâce : 17 après la Loi\ncommuniquée par Moïse, la grâce et la vérité sont\nvenues par Jésus Christ.\n Gloire à Dieu à jamais !"}},"tierce":{"nom":"Tierce","heure":"9h00","commemoration":"Jugement du Christ par Pilate — Descente du Saint-Esprit","psaumes":[{"titre":"Psaume 19","texte":"Que le Seigneur te réponde au jour de détresse\nque le nom du Dieu de Jacob te défende.\nDu sanctuaire, qu'Il t'envoie le secours,\nqu'Il te soutienne des hauteurs de Sion.\n\nQu'Il se rappelle toutes tes offrandes ;\nton holocauste, qu'Il le trouve savoureux.\nQu'Il te donne à la mesure de ton cœur,\nqu'Il accomplisse tous tes projets.\n\nNous acclamerons ta victoire\nen arborant le nom de notre Dieu.\nLe Seigneur accomplira\ntoutes tes demandes.\n\nMaintenant, je le sais :\nle Seigneur donne la victoire à son messie ;\ndu sanctuaire des cieux, il lui répond\npar les exploits de sa main victorieuse.\n\nAux uns, les chars ; aux autres, les chevaux ;\nà nous, le nom de notre Dieu : le Seigneur.\nEux ils plient et s'effondrent ;\nnous, debout, nous résistons.\n\nSeigneur, donne au roi la victoire !\nRéponds-nous au jour de notre appel. Alléluia !"},{"titre":"Psaume 22","texte":"Le Seigneur est mon berger :\nje ne manque de rien\nSur des prés d'herbe fraîche,\nIl me fait reposer.\n\nIl me mène vers les eaux tranquilles\net me fait revivre ;\nil me conduit par le juste chemin\npour l'honneur de Son nom.\n\nSi je traverse les ravins de la mort,\nje ne crains aucun mal,\ncar Tu es avec moi :\nton bâton me guide et me rassure.\n\nTu prépares la table pour moi\ndevant mes ennemis ;\ntu répands le parfum sur ma tête,\nma coupe est débordante.\n\nGrâce et bonheur m'accompagnent\ntous les jours de la vie ;\nj'habiterai la maison du Seigneur\npour la durée de mes jours. Alléluia !"},{"titre":"Psaume 23","texte":"Au Seigneur, le monde et sa richesse,\nla terre et tous les habitants :\nC'est lui qui l'a fondée sur les mers\net la garde inébranlable sur les flots.\n\nQui peut gravir la montagne du Seigneur\net se tenir dans le lieu saint ?\nL'homme au cœur pur, aux mains innocentes,\nqui ne livre pas son âme aux idoles\net ne dit pas de faux serments.\n\nIl obtient, du Seigneur, la bénédiction,\net de Dieu son Sauveur, la justice.\nVoici le peuple de ceux qui le cherchent !\nVoici Jacob qui recherche Ta face.\n\nPortes, levez vos frontons,\nélevez-vous portes éternelles :\nqu'il entre, le roi de gloire !\n\nQui est ce roi de gloire ?\nC'est le Seigneur, le fort, le vaillant,\nle Seigneur, le vaillant des combats.\n\nPortes, levez vos frontons,\nélevez-vous portes éternelles :\nqu'il entre, le roi de gloire !\n\nQui donc est ce roi de gloire ?\nC'est le Seigneur, Dieu de l'univers ;\nc'est Lui, le roi de gloire. Alléluia !"},{"titre":"Psaume 25","texte":"Seigneur, rends-moi justice :\nj'ai marché sans faillir.\nJe m'appuie sur le Seigneur\net ne faiblirai pas\nÉprouve-moi, Seigneur, scrute-moi,\npasse au feu mes reins et mon cœur.\n\nJ'ai devant les yeux ton amour,\nje marche selon ta vérité.\nJe ne m'assieds pas chez l'imposteur,\nje n'entre pas chez l'hypocrite.\nL'assemblée des méchants, je la hais,\nje ne m'assieds pas chez les impies.\n\nJe lave mes mains en signe d'innocence\npour approcher de ton autel, Seigneur,\npour dire à pleine voix l'action de grâce\net rappeler toutes les merveilles.\n\nSeigneur, j'aime la maison que tu habites,\nle lieu où demeure ta gloire.\n\nNe m'inflige pas le sort des pécheurs,\nle destin de ceux qui versent le sang :\nIls ont dans les mains la corruption ;\nleur droite est pleine de profits.\n\nOui j'ai marché sans défaillir :\nlibère-moi ! Prends pitié de moi !\nSous mes pieds le terrain est sûr ;\ndans l'assemblée je bénirai le Seigneur. Alléluia !"},{"titre":"Psaume 28","texte":"Rendez au Seigneur, fils de Dieu,\napportez au Seigneur des petits de béliers,\nrendez au Seigneur gloire et puissance.\n\nRendez au Seigneur la gloire de Son nom\nadorez le Seigneur, éblouissant de sainteté.\n\nLa voix du Seigneur domine les eaux,\nle Dieu de la gloire déchaîne le tonnerre,\nle Seigneur domine la masse des eaux.\n\nVoix du Seigneur dans sa force,\nvoix du Seigneur qui éblouit,\nvoix du Seigneur : elle casse les cèdres.\n\nLe Seigneur fracasse les cèdres du Liban ;\nil fait bondir comme un veau le Liban,\nle Sirion comme un jeune taureau.\n\nVoix du Seigneur : elle taille des lames de feu ;\nvoix du Seigneur : elle épouvante le désert ;\nle Seigneur épouvante le désert de Cadès.\n\nVoix du Seigneur qui fait enfanter les biches,\nqui ravage les forêts.\nEt tous dans son temple s'écrient : * Gloire !+\n\nAu déluge le Seigneur a siégé ;\nil siège, le Seigneur, il est Roi pour toujours !\n\nLe Seigneur accorde à son peuple la puissance,\nle Seigneur bénit son peuple en lui donnant la paix.\n Alléluia !"},{"titre":"Psaume 33","texte":"Je bénirai le Seigneur en tout temps,\nsa louange sans cesse sur mes lèvres.\nJe me glorifierai dans le Seigneur :\nque les pauvres m'entendent et soient en fête !\n\nMagnifiez avec moi le Seigneur,\nexaltons tous ensemble son nom.\nJe cherche le Seigneur, il me répond :\nde toutes mes frayeurs, il me délivre.\n\nQui regarde vers lui resplendira,\nsans ombre ni trouble au visage.\nUn pauvre crie ; le Seigneur entend :\nil le sauve de toutes ses angoisses.\n\nL'ange du Seigneur campe à l'entour\npour libérer ceux qui le craignent.\nGoûtez et voyez : le Seigneur est bon !\nHeureux qui trouve en lui son refuge !\n\nSaints du Seigneur, adorez-le :\nrien ne manque à ceux qui le craignent.\nDes riches ont tout perdu, ils ont faim ;\nqui cherche le Seigneur ne manquera d'aucun bien.\n\nVenez, mes fils, écoutez-moi,\nque je vous enseigne la crainte du Seigneur.\nQui donc aime la vie\net désire les jours où il verra le bonheur ?\n\nGarde ta langue du mal\net tes lèvres des paroles perfides.\nÉvite le mal, fais le bien,\npoursuis la paix, recherche-la.\nLe Seigneur regarde les justes,\nil écoute, attentif à leur cris.\nLe Seigneur affronte les méchants\npour effacer de la terre leur mémoire.\n\nLe Seigneur entend ceux qui l'appellent :\nde toutes leurs angoisses, il les délivre.\nIl est proche du cœur brisé,\nil sauve l'esprit abattu.\n\nMalheur sur malheur pour le juste,\nmais le Seigneur chaque fois le délivre.\nIl veille sur chacun de ses os :\npas un ne sera brisé.\n\nLe mal tuera les méchants ;\nils seront châtiés d'avoir haï le juste.\nLe Seigneur rachètera ses serviteurs :\npas de châtiment pour qui\ntrouve en Lui son refuge. Alléluia !"},{"titre":"Psaume 40","texte":"Heureux qui pense au pauvre et au faible :\nle Seigneur le sauve au jour du malheur !\nIl le protège et le garde en vie, heureux sur la terre.\nSeigneur, ne le livre pas à la merci de l'ennemi !\nLe Seigneur le soutient sur son lit de souffrance :\nsi malade qu'il soit, tu le relèves.\n\nJ'avais dit : * Pitié pour moi, Seigneur,\nguéris-moi, car j'ai péché contre toi !+\nMes ennemis me condamnent déjà :\n* Quand sera-t-il mort ? Son nom, effacé ?+\nSi quelqu'un vient me voir, ses propos sont vides ;\nil emplit son cœur de pensées méchantes,\nil sort, et dans la rue il parle.\n\nUnis contre moi, mes ennemis murmurent,\nà mon sujet, ils présagent le pire :\n* C'est un mal pernicieux qui le ronge ;\nle voilà couché, il ne pourra plus se lever.+\nMême l'ami, qui avait ma confiance\net partageait mon pain, m'a frappé du talon.\n\nMais Toi, Seigneur, prends pitié de moi ;\nrelève-moi, je leur rendrai ce qu'ils méritent.\nOui, je saurai que tu m'aimes\nsi mes ennemis ne chantent pas victoire.\nDans mon innocence tu m'as soutenu\net rétabli pour toujours devant Ta Face.\n\nBéni soit le Seigneur,\nDieu d'Israël,\ndepuis toujours et pour toujours !\nAmen ! Amen ! Alléluia !"},{"titre":"Psaume 42","texte":"Rends-moi justice, ô mon Dieu, défends ma cause\ncontre un peuple sans foi ;\nde l'homme qui ruse et trahit,\nlibère-moi.\n\nC'est Toi, Dieu, ma forteresse :\npourquoi me rejeter ?\nPourquoi vais-je assombri,\npressé par l'ennemi ?\n\nEnvoie ta lumière et ta vérité :\nqu'elles guident mes pas\net me conduisent à ta montagne sainte,\njusqu'en ta demeure.\n\nJ'avancerai jusqu'à l'autel de Dieu,\nvers Dieu qui est toute ma joie ;\nje te rendrai grâce avec ma harpe,\nDieu, mon Dieu !\n\nPourquoi te désoler, ô mon âme, et gémir sur moi ?\nEspère en Dieu ! De nouveau je rendrai grâce :\nil est mon sauveur et mon Dieu ! Alléluia !"},{"titre":"Psaume 44","texte":"D'heureuses paroles jaillissent de mon cœur\nquand je dis mes poèmes pour le roi\nd'une langue aussi vive que la plume du scribe !\n\nTu es beau, comme aucun des enfants de l'homme,\nla grâce est répandue sur tes lèvres :\noui, Dieu te bénit pour toujours.\nGuerrier valeureux, porte l'épée de noblesse\net d'honneur !\nTon honneur, c'est de courir au combat\npour la justice, la clémence et la vérité.\n\nTa main jettera la stupeur,\nles flèches qui déchirent ;\nsous tes coups, les peuples s'abattront,\nles ennemis du roi, frappés en plein cœur.\n\nTon trône est divin, un trône éternel ;\nton sceptre royal est sceptre de droiture :\ntu aimes la justice, tu réprouves le mal.\n\nOui, Dieu, ton Dieu t'a consacré\nd'une onction de joie,\ncomme aucun de tes semblables ;\nla myrrhe et l'aloès parfument ton vêtement.\n\nDes palais d'ivoire, la musique t'enchante.\n\nParmi tes bien-aimées sont des filles de roi ;\nà ta droite, la préférée, sous les ors d'Ophir.\n\nÉcoute, ma fille, regarde et tends l'oreille ;\noublie ton peuple et la maison de ton père :\nle roi sera séduit par ta beauté.\n\nIl est ton Seigneur : prosterne-toi devant lui.\nAlors, fille de tyr, les plus riches du peuple,\nchargés de présents, quêteront ton sourire.\n\nFille de roi, elle est là, dans sa gloire,\nvêtue d'étoffes d'or ;\non la conduit, toute parée, vers le roi.\n\nDes jeunes filles, ses compagnes, lui font cortège ;\non les conduit parmi les chants de fêtes :\nelles entrent au palais du roi.\n\nA la place de tes pères se lèveront tes fils ;\nsur toute la terre tu feras d'eux des princes.\n\nJe ferai vivre ton nom pour les âges des âges :\nque les peuples te rendent grâce,\ntoujours, à jamais ! Alléluia !"},{"titre":"Psaume 45","texte":"Dieu est pour nous refuge et force\nsecours dans la détresse, toujours offert.\n\nNous serons sans crainte si la terre est secouée,\nsi les montagnes s'effondrent au creux de la mer ;\nses flots peuvent mugir et s'enfler,\nles montagnes, trembler dans la tempête :\n\nLe fleuve, ses bras réjouissent la ville de Dieu,\nla plus sainte des demeures du Très-Haut.\nDieu s'y tient : elle est inébranlable ;\nquand renaît le matin, Dieu la secourt.\nDes peuples mugissent, des règnes s'effondrent ;\nquand sa voix retentit, la terre se défait.\n\nIl est avec nous,\nle Seigneur de l'univers\ncitadelle pour nous\nle Dieu de Jacob !\n\nVenez et voyez les actes du Seigneur,\ncomme il couvre de ruines la terre.\nIl détruit la guerre jusqu'au bout du monde,\nil casse les arcs, brise les lances, incendie les\nchars :\n* Arrêtez ! Sachez que je suis Dieu.\nJe domine les nations, je domine la terre. +\n\nIl est avec nous,\nle Seigneur de l'univers\ncitadelle pour nous\nle Dieu de Jacob ! Alléluia !"}],"evangile":{"reference":"saint Jean ( 14 : 26 - 15 : 4 )","texte":"26\n Mais le Paraclet, l'Esprit Saint que le Père enverra\nen mon nom, lui vous enseignera tout, et il vous fera\nsouvenir de tout ce que je vous ai dit.\n27\n C'est ma paix que je vous laisse, c'est ma paix que\nje vous donne ; ce n'est pas à la manière du monde\nque je vous la donne. Ne soyez donc pas\nbouleversés et effrayés. 29 Vous avez entendu ce\nque je vous ai dit : je m'en vais et je reviens vers\nvous. Si vous m'aimiez, vous seriez dans la joie\npuisque je pars vers le Père, car le Père est plus\ngrand que moi. 29 Je vous ai dit toutes ces choses\nmaintenant, avant qu'elles n'arrivent ; ainsi,\nlorsqu'elles arriveront, vous croirez. 30 Désormais, je\nne parlerai plus beaucoup avec vous, car le prince\ndu monde va venir. Certes, il n'y a rien en moi qui\npuisse lui donner prise, mais il faut que le monde\nsache que j'aime mon Père, et que je fais tout ce\nque mon Père m'a commandé. Levez-vous, partons\nd'ici.\n15 1 Moi je suis la vraie vigne, et mon Père est le\nvigneron. 2 Tout sarment qui est en moi, mais qui ne\nporte pas de fruit, mon Père l'enlève ; tout sarment\nqui donne du fruit, il le nettoie pour qu'il en donne\nd'avantage. 3 Mais vous, déjà vous voici nets et\npurifiés grâce à la parole que je vous ai dite :\n4\n Demeurez en moi, comme moi en vous.\n Gloire à Dieu à jamais !"}},"sexte":{"nom":"Sexte","heure":"12h00","commemoration":"Crucifixion du Christ sur la Croix","psaumes":[{"titre":"Psaume 53","texte":"Par Ton nom, Dieu, sauve-moi,\npar Ta puissance rends-moi justice ;\nDieu, entends ma prière,\nécoute les paroles de ma bouche.\n\nDes étrangers se sont levés contre moi,\ndes puissants cherchent ma perte :\nils n'ont pas souci de Dieu.\n\nMais voici que Dieu vient à mon aide,\nle Seigneur est mon appui entre tous.\nQue le mal retombe sur ceux qui me guettent ;\npar ta vérité, Seigneur, détruis-les.\n\nDe grand cœur, je t'offrirai le sacrifice,\nje rendrai grâce à ton nom, car il est bon !\nOui, il m'a délivré de toute angoisse :\nj'ai vu mes ennemis défaits. Alléluia !"},{"titre":"Psaume 56","texte":"Pitié, mon Dieu, pitié pour moi !\nEn Toi je cherche refuge,\nun refuge à l'ombre de tes ailes,\naussi longtemps que dure le malheur.\n\nJe crie vers Dieu, le Très-Haut,\nvers Dieu qui fera tout pour moi.\nDu ciel il m'envoie le salut :\nmon adversaire a blasphémé !\nQue Dieu envoie son amour et sa vérité !\n\nJe suis au milieu de lions\net gisant parmi des bêtes féroces ;\nil ont pour langue une arme tranchante,\npour dents, des lances et des flèches.\n\nDieu, lève-toi sur les cieux :\nque ta gloire domine la terre !\n\nIls ont tendu un filet sous mes pas :\nj'allais succomber.\nIls ont creusé un trou devant moi,\nils y sont tombés.\n\nMon cœur est prêt, mon Dieu,\nmon cœur est prêt !\nJe veux chanter, jouer des hymnes !\n\nÉveille-toi, ma gloire !\n\nÉveillez-vous, harpe, cithare,\nque j'éveille l'aurore !\nJe te rendrai grâce parmi les peuples, Seigneur,\net jouerai mes hymnes en tous pays.\nTon amour est plus grand que les cieux,\nta vérité, plus haute que les nues.\n\nDieu, lève-toi sur les cieux :\nque ta gloire domine la terre ! Alléluia !"},{"titre":"Psaume 60","texte":"Dieu, entends ma plainte,\nexauce ma prière ;\ndes terres lointaines je t'appelle\nquand le cœur me manque.\n\nJusqu'au rocher trop loin de moi\ntu me conduiras,\ncar tu es pour moi un refuge,\nun bastion, face à l'ennemi.\n\nJe veux être chez toi pour toujours,\nme réfugier à l'abri de tes ailes.\n\nOui, mon Dieu, tu exauces mon vœu,\ntu fais largesse à ceux qui craignent ton nom.\n\nAccorde au roi des jours et des jours :\nque ses années deviennent des siècles !\nQu'il trône à jamais devant la face de Dieu !\nAssigne à sa garde Amour et Vérité.\nAlors, je chanterai sans cesse ton nom,\nj'accomplirai mon vœu jour après jour. Alléluia !"},{"titre":"Psaume 62","texte":"Dieu, Tu es mon Dieu, je Te cherche dès l'aube ;\nmon âme a soif de Toi ;\nauprès de Toi languit ma chair\nterre aride, altérée, sans eau.\n\nJe T'ai contemplé au sanctuaire,\nj'ai vu Ta force et Ta gloire.\nTon amour vaut mieux que la vie :\nTu seras la louange de mes lèvres.\n\nToute ma vie je vais Te bénir,\nlever les mains en invoquant Ton nom.\nComme un festin je serai rassasié ;\nla joie sur les lèvres, je dirai Ta louange.\n\nDans la nuit, je me souviens de Toi\net je reste des heures à Te parler.\nOui, Tu es venu à mon secours ;\nje crie de joie à l'ombre de Tes ailes.\nMon âme s'attache à Toi,\nTa main droite me soutient.\n\nMais ceux qui pourchassent mon âme,\nqu'ils descendent aux profondeurs de la terre,\nqu'on les passe au fil de l'épée,\nqu'ils deviennent la pâture des loups !\nEt le roi se réjouira de son Dieu.\nQui jure par Lui en sera glorifié,\ntandis que l'homme de mensonge\naura la bouche close ! Alléluia !"},{"titre":"Psaume 66","texte":"Que Dieu nous prenne en grâce et nous bénisse,\nQue Son visage s'illumine pour nous ;\net ton chemin sera connu sur toute la terre,\nton salut, parmi toutes les nations.\n\nQue les peuples, Dieu, Te rendent grâce ;\nqu'ils te rendent grâce tous ensemble !\n\nQue les nations chantent leur joie,\ncar Tu gouvernes le monde avec justice ;\nTu gouvernes les peuples avec droiture,\nsur la terre, Tu conduis les nations.\n\nQue les peuples, Dieu, Te rendent grâce ;\nqu'ils te rendent grâce tous ensemble !\n\nLa terre a donné son fruit ;\nDieu, notre Dieu, nous bénit.\n\nQue Dieu nous bénisse,\net que la terre tout entière L'adore ! Alléluia !"},{"titre":"Psaume 69","texte":"Mon Dieu viens me délivrer ;\nSeigneur, viens vite à mon secours !\nQu'ils soient humiliés, déshonorés,\nceux qui s'en prennent à ma vie !\n\nQu'ils reculent, couverts de honte,\nceux qui cherchent mon malheur ;\nque l'humiliation les écrase,\nceux qui me disent : *C'est bien fait !+\n\nMais tu seras l'allégresse et la joie\nde tous ceux qui te cherchent ;\ntoujours ils rediront : *Dieu est Grand !+\nceux qui aiment ton salut.\n\nJe suis pauvre et malheureux,\nmon Dieu, viens vite !\nTu es mon secours, mon libérateur :\nSeigneur, ne tarde pas ! Alléluia !"},{"titre":"Psaume 83","texte":"De quel amour sont aimées tes demeures,\nSeigneur, Dieu de l'univers !\n\nMon âme s'épuise à désirer\nles parvis du Seigneur ;\nmon cœur et ma chair sont un cri\nvers le Dieu vivant !\n\nL'oiseau lui-même s'est trouvé une maison\net l'hirondelle, un nid pour abriter sa couvée :\ntes autels, Seigneur de l'univers,\nmon Roi et mon Dieu !\n\nHeureux les habitants de ta maison :\nils pourront te chanter encore !\nHeureux les hommes dont tu es la force :\ndes chemins s'ouvrent dans leur cœur !\n\nQuand ils traversent la vallée de la soif,\nils la changent en source ;\nde quelles bénédictions la revêtent\nles pluies de printemps !\n\nIls vont de hauteur en hauteur,\nils se présentent devant Dieu à Sion.\n\nSeigneur, Dieu de l'univers, entends ma prière ;\nécoute, Dieu de Jacob.\nDieu, vois notre bouclier\nregarde le visage de ton messie.\n\nOui, un jour dans tes parvis\nen vaut plus que mille.\n\nJ'ai choisi de me tenir sur le seuil,\ndans la maison de Dieu,\nplutôt que d'habiter\nparmi les infidèles.\nLe Seigneur Dieu est un soleil,\nil est un bouclier ;\nle Seigneur donne la grâce,\nil donne la gloire.\n\nJamais il ne refuse le bonheur\nà ceux qui vont sans reproche.\n\nSeigneur, Dieu de l'univers,\nheureux qui espère en toi ! Alléluia !"},{"titre":"Psaume 84","texte":"Tu as aimé, Seigneur, cette terre,\ntu as fait revenir les déportés de Jacob ;\ntu as ôté le péché de ton peuple,\ntu as couvert toute sa faute ;\ntu as mis fin à toutes tes colères,\ntu es revenu de ta grande fureur.\n\nFais-nous revenir, Dieu, notre salut,\noublie ton ressentiment contre nous.\n\nSeras-tu toujours irrité contre nous,\nmaintiendras-tu ta colère d'âge en âge ?\n\nN'est-ce pas toi qui reviendras nous faire vivre\net qui seras la joie de ton peuple ?\nFais-nous voir, Seigneur, ton amour,\net donne-nous ton salut.\n\nJ'écoute : que dira le Seigneur Dieu ?\nCe qu'il dit, c'est la paix pour son peuple\net ses fidèles ;\nqu'ils ne reviennent jamais à leur folie !\nSon salut est proche de ceux qui le craignent,\net la gloire habitera notre terre.\n\nAmour et vérité se rencontrent,\njustice et paix s'embrassent ;\nla vérité germera de la terre\net du ciel se penchera la justice.\n\nLe Seigneur donnera ses bienfaits,\net notre terre donnera son fruit.\nLa justice marchera devant lui,\net ses pas traceront le chemin. Alléluia !"},{"titre":"Psaume 85","texte":"Écoute, Seigneur, réponds-moi,\ncar je suis pauvre et malheureux.\n\nVeille sur moi qui suis fidèle, ô Dieu,\nsauve ton serviteur qui s'appuie sur toi.\n\nPrends pitié de moi, Seigneur,\ntoi que j'appelle chaque jour.\nSeigneur, réjouis ton serviteur :\nvers toi, j'élève mon âme !\n\nToi qui es bon et qui pardonnes,\nplein d'amour pour tous ceux qui t'appellent,\n\nécoute ma prière, Seigneur,\nentends ma voix qui te supplie.\n\nJe t'appelle au jour de ma détresse,\net toi, Seigneur, tu me réponds.\nAucun parmi les dieux n'est comme toi,\net rien n'égale tes œuvres.\n\nToutes les nations, que tu as faites,\nviendront se prosterner devant toi\net rendre gloire à ton nom, Seigneur,\ncar tu es grand et tu fais des merveilles,\ntoi, Dieu, le seul.\n\nMontre-moi ton chemin, Seigneur,\nque je marche suivant ta vérité ;\nunifie mon cœur pour qu'il craigne ton nom.\n\nJe te rends grâce de tout mon cœur,\nSeigneur mon Dieu,\ntoujours je rendrai gloire à ton nom ;\n\nil est grand, ton amour pour moi :\ntu m'as tiré de l'abîme des morts.\n\nMon Dieu, des orgueilleux se lèvent contre moi,\ndes puissants se sont ligués pour me perdre :\nils n'ont pas souci de toi.\n\nToi, Seigneur,\nDieu de tendresse et de pitié,\nlent à la colère,\nplein d'amour et de vérité !\n\nRegarde vers moi,\nprends pitié de moi.\nDonne à ton serviteur ta force,\net sauve le fils de ta servante.\n\nAccomplis un signe en ma faveur ;\nalors mes ennemis, humiliés,\nverront que toi, Seigneur,\ntu m'aides et me consoles. Alléluia !"},{"titre":"Psaume 86","texte":"Elle est fondée sur les montagnes saintes\nLe Seigneur aime les portes de Sion\nplus que toutes le demeures de Jacob.\nPour ta gloire on parle de toi, ville de Dieu !\nJe cite Rahab et Babylone\nparmi celles qui me connaissent.\n\nVoyez Tyr, la Philistie, l'Éthiopie :\nchacune est née là-bas.\nMais on appelle Sion : * Ma mère ! +\ncar en elle, tout est né.\n\nC'est lui, le Très-Haut, qui la maintient.\n\nAu registre des peuples, le Seigneur écrit :\n* Chacun est né là-bas +\nTous ensemble ils dansent et ils chantent :\n*En toi, toutes nos sources !+ Alléluia !"},{"titre":"Psaume 90","texte":"Quand je me tiens sous l'abri du Très-haut\net repose à l'ombre du Puissant,\nje dis au Seigneur : * Mon refuge,\nmon rempart, mon Dieu, dont je suis sûr ! +\n\nC'est lui qui te sauve des filets du chasseur\net de la peste maléfique ;\nil te couvre et te protège.\nTu trouves sous son aile un refuge :\nsa fidélité est une armure, un bouclier.\n\nTu ne craindras ni les terreurs de la nuit,\nni la flèche qui vole au grand jour,\nni la peste qui rôde dans le noir,\nni le fléau qui frappe à midi.\n\nQu'il en tombe mille à tes côtés,\nqu'il en tombe dix mille à ta droite,\ntoi, tu restes hors d'atteinte.\n\nIl suffit que tu ouvres les yeux,\ntu verras le salaire du méchant.\nOui, le Seigneur est ton refuge ;\ntu as fait du Très-haut ta forteresse.\nLe malheur ne pourra te toucher,\nni le danger, approcher de ta demeure :\nil donne mission à ses anges\nde te garder sur tous tes chemins.\nIls te porteront sur leurs mains\npour que ton pied ne heurte les pierres ;\ntu marcheras sur la vipère et le scorpion,\ntu écraseras le lion et le dragon.\n\n* Puisqu'il s'attache à moi, je le délivre ;\nje le défends, car il connaît mon nom.\nIl m'appelle, et moi, je lui réponds ;\nje suis avec lui dans son épreuve.\n\n* Je veux le libérer, le glorifier ;\nde longs jours, je veux le rassasier,\net je ferais qu'il voie mon salut. + Alléluia !"},{"titre":"Psaume 92","texte":"Le Seigneur est roi ;\nil est vêtu de magnificence,\n\nLe Seigneur a revêtu sa force.\n\nEt la terre tient bon, inébranlable ;\ndès l'origine ton trône tient bon,\ndepuis toujours, Tu es.\n\nLes flots s'élèvent, Seigneur,\nles flots élèvent leur voix,\nles flots élèvent leur fracas.\nPlus que la voix des eaux profondes,\ndes vagues superbes de la mer,\nsuperbe est le Seigneur dans les hauteurs.\nTes volontés sont vraiment immuables :\nla sainteté emplit ta maison,\nSeigneur, pour la suite des temps. Alléluia !"}],"evangile":{"reference":"saint Matthieu ( 5 : 1 - 16 )","texte":"1\n Quand Jésus vit la foule, il gravit la montagne.\nIl s'assit, et ses disciples s'approchèrent. 2 Alors,\nouvrant la bouche, il se mit à les instruire. Il disait :\n3\n Heureux les pauvres de cœur : le Royaume des\ncieux est à eux.\n4\n Heureux les doux : ils obtiendront la terre !\n5\n Heureux ceux qui pleurent : ils seront consolés !\n6\n Heureux ceux qui ont faim et soif de la justice : ils\nseront rassasiés !\n7\n Heureux les miséricordieux : ils obtiendront\nmiséricorde !\n8\n Heureux les cœurs purs : ils verront Dieu !\n9\n Heureux les artisans de paix : ils seront appelés fils\nde Dieu !\n10\n Heureux ceux qui sont persécutés pour la justice :\nle Royaume des cieux est à eux !\n11\n Heureux serez-vous si l'on vous insulte, si l'on\nvous persécute et si l'on dit faussement toute sorte\nde mal, à cause de moi.\n12\n Réjouissez-vous, soyez dans l'allégresse, car\nvotre récompense sera grande dans les cieux ! C'est\nainsi qu'on a persécuté les prophètes qui vous ont\nprécédés.13 Vous êtes le sel de la terre. Si le sel se\ndénature, comment redeviendra-t-il du sel ? Il n'est\nplus bon à rien : on le jette dehors et les gens le\npiétinent. 14 Vous êtes la lumière du monde. Une ville\nsituée sur une montagne ne peut être cachée. 15 Et\nl'on n'allume pas une lampe pour la mettre sous le\nboisseau ; on la met sur le lampadaire, et elle brille\npour tous ceux qui sont dans la maison. 16 De\nmême, que votre lumière brille devant les hommes :\nalors en voyant ce que vous faites de bien, ils\nrendront gloire à votre Père qui est aux cieux.\nGloire à Dieu à jamais !"}},"none":{"nom":"None","heure":"15h00","commemoration":"Mort du Christ sur la Croix — le voile se déchire","psaumes":[{"titre":"Psaume 95","texte":"Chantez au Seigneur un chant nouveau\nchantez au Seigneur, terre entière,\nchantez au Seigneur et bénissez son nom !\n\nDe jour en jour, proclamez son salut.\nRacontez à tous les peuples sa gloire,\nà toutes les nations ses merveilles !\n\nIl est grand, le Seigneur, hautement loué,\nredoutable au-dessus de tous les dieux :\nnéant, tous les dieux des nations !\n\nLui, le Seigneur, a fait les cieux :\ndevant lui splendeur et majesté,\ndans son sanctuaire, puissance et beauté.\n\nRendez au Seigneur, familles des peuples,\nrendez au Seigneur la gloire et la puissance,\nrendez au Seigneur la gloire de son nom.\n\nApportez votre offrande, entrez dans ses parvis,\nadorez le Seigneur, éblouissant de sainteté :\ntremblez devant lui, terre entière.\n\nAllez dire aux nations : *Le Seigneur est roi ! +\nLe monde, inébranlable, tient bon.\nIl gouverne les peuples avec droiture.\n\nJoie au ciel ! Exulte la terre !\nLes masses de la mer mugissent,\nla campagne tout entière est en fête.\n\nLes arbres des forêts dansant de joie\ndevant la face du Seigneur, car il vient,\ncar il vient pour juger la terre.\n\nIl jugera le monde avec justice,\net les peuples selon sa vérité ! Alléluia !"},{"titre":"Psaume 97","texte":"Chantez au Seigneur un chant nouveau,\ncar il a fait des merveilles ;\npar son bras très saint, par sa main puissante,\nil s'est assuré la victoire.\n\nLe Seigneur a fait connaître sa victoire\net révélé sa justice aux nations ;\nil s'est rappelé sa fidélité, son amour,\nen faveur de la maison d'Israël ;\nla terre tout entière a vu\nla victoire de notre Dieu.\n\nAcclamez le Seigneur, terre entière,\nsonnez, chantez, jouez.\nJouez pour le Seigneur sur la cithare,\nsur la cithare et tous les instruments ;\nau son de la trompette et du cor,\nacclamez votre roi, le Seigneur !\n\nQue résonnent la mer et sa richesse,\nle monde et tous ses habitants ;\nque les fleuves battent des mains,\nque les montagnes chantent leur joie,\nà la face du Seigneur, car il vient\npour gouverner la terre,\npour gouverner le monde avec justice\net les peuples avec droiture ! Alléluia !"},{"titre":"Psaume 98","texte":"Le Seigneur est roi : les peuples s'agitent.\nIl trône au-dessus des kéroubim : la terre tremble.\n\nEn Sion le Seigneur est grand :\nc'est lui qui domine tous les peuples\n\nIls proclament son nom, grand et redoutable,\ncar il est saint !\n\nIl est fort le roi qui aime la justice.\nC'est toi, l'auteur du droit,\ntoi qui assures en Jacob la justice et la droiture.\n\nExaltez le Seigneur notre Dieu,\nprosternez vous au pied de son trône,\ncar il est saint !\n\nMoïse et le prêtre Aaron, Samuel, le suppliant,\ntous, ils suppliaient le Seigneur,\net lui leur répondait.\n\nDans la colonne de nuée, il parlait avec eux ;\nils ont gardé ses volontés, les lois qu'il leur donna.\n\nSeigneur notre Dieu, tu leur as répondu :\navec eux tu restais un Dieu patient,\nmais tu les punissais pour leurs fautes.\n\nExaltez le Seigneur notre Dieu,\nprosternez-vous devant sa sainte montagne,\ncar il est saint, le Seigneur notre Dieu. Alléluia !"},{"titre":"Psaume 99","texte":"Acclamez le Seigneur, terre entière,\nservez le Seigneur dans l'allégresse,\nvenez à lui avec des chants de joie !\n\nReconnaissez que le Seigneur est Dieu :\nil nous a faits, et nous sommes à lui,\nnous, son peuple, son troupeau.\n\nVenez dans sa maison lui rendre grâce,\ndans sa demeure chanter ses louanges ;\nrendez-lui grâce et bénissez son nom !\n\nOui, le Seigneur est bon,\néternel est son amour,\nsa fidélité s'étend d'âge en âge. Alléluia !"},{"titre":"Psaume 100","texte":"Je chanterai justice et bonté :\nà toi mes hymnes, Seigneur !\nJ'irai par le chemin le plus parfait ;\nquand viendras-tu jusqu'à moi ?\n\nJe marcherai d'un cœur parfait\navec ceux de ma maison ;\n\nje n'aurai pas même un regard\npour les pratiques démoniaques.\n\nJe haïrai l'action du traître\nqui n'aura sur moi nulle prise ;\nloin de moi, le cœur tortueux !\nLe méchant, je ne veux pas le connaître.\nQui dénigre en secret son prochain,\nje le réduirai au silence ;\nle regard hautain, le cœur ambitieux,\nje ne peux les tolérer.\n\nMes yeux distinguent les hommes sûrs du pays :\nils siégeront à mes côtés ;\nqui se conduira parfaitement\ncelui-là me servira.\n\nPas de siège, parmi ceux de ma maison,\npour qui se livre à la fraude ;\nimpossible à qui profère le mensonge\nde tenir sous mon regard.\n\nChaque matin, je réduirai au silence\ntous les coupables du pays,\npour extirper de la ville du Seigneur\ntous les auteurs de crimes. Alléluia !"},{"titre":"Psaume 109","texte":"Oracle du Seigneur à mon seigneur :\n* Siège à ma droite,\net je ferai de tes ennemis\nle marchepied de ton trône. +\n\nDe Sion, le Seigneur te présente\nle sceptre de ta force :\n* Domine jusqu'au cœur de l'ennemi. +\n\nLe jour où paraît ta puissance,\ntu es prince, éblouissant de sainteté :\n* Comme la rosée qui naît de l'aurore,\nje t'ai engendré.+\n\nLe Seigneur l'a juré\ndans un serment irrévocable :\n* Tu es prêtre à jamais\nselon l'ordre de Melkisédek.+\n\nA ta droite se tient le Seigneur :\nil brise les rois au jour de sa colère.\nIl juge les nations : les cadavres s'entassent ;\nil brise les chefs, loin sur la terre.\n\nAu torrent il s'abreuve en chemin,\nc'est pourquoi il redresse la tête. Alléluia !"},{"titre":"Psaume 112","texte":"Louez, serviteurs du Seigneur,\nlouez le nom du Seigneur !\nBéni soit le nom du Seigneur,\nmaintenant et pour les siècles des siècles !\nDu levant au couchant du soleil\nloué soit le nom du Seigneur !\n\nLe Seigneur domine tous les peuples,\nsa gloire domine les cieux.\nQui est semblable au Seigneur notre Dieu ?\nLui, Il siège là-haut.\nMais Il abaisse Son regard\nvers le ciel et vers la terre.\n\nDe la poussière Il relève le faible,\nIl retire le pauvre de la cendre\npour qu'il siège parmi les princes,\nparmi les princes de son peuple.\nIl installe en sa maison la femme stérile,\nheureuse mère au milieu de ses fils. Alléluia !"},{"titre":"Psaume 114","texte":"J'aime le Seigneur :\nil entend le cri de ma prière ;\nil incline vers moi son oreille :\n\ntoute ma vie je l'invoquerai.\n\nJ'étais pris dans les filets de la mort,\nretenu dans les liens de l'abîme,\nj'éprouvais la tristesse et l'angoisse,\nJ'ai invoqué le nom du Seigneur\n* Seigneur, je t'en prie, délivre-moi +\nLe Seigneur est justice et pitié\nnotre Dieu est tendresse.\nLe Seigneur défend les petits :\nj'étais faible, il m'a sauvé.\n\nRetrouve ton repos, mon âme,\ncar le Seigneur t'a fait du bien.\nIl a sauvé mon âme de la mort,\ngardé mes yeux des larmes\net mes pieds du faux pas.\n\nJe marcherai en présence du Seigneur\nsur la terre des vivants. Alléluia !"},{"titre":"Psaume 115","texte":"Je crois, et je parlerai,\nmoi qui ai beaucoup souffert,\nmoi qui ai dit dans mon trouble :\n* L'homme n'est qu'un mensonge.+\n\nComment rendrai-je au Seigneur\ntout ce qu'il m'a fait ?\n\nJ'élèverai la coupe du salut,\nj'invoquerai le nom du Seigneur.\nJe tiendrai mes promesses au Seigneur,\noui, devant tout son peuple !\n\nIl en coûte au Seigneur\nde voir mourir les siens !\nNe suis-je pas, Seigneur, ton serviteur,\nton serviteur, le fils de ta servante,\nmoi, dont tu brisas les chaînes ?\n\nJe t'offrirai le sacrifice d'action de grâce,\nj'invoquerai le nom du Seigneur.\nJe tiendrai mes promesses au Seigneur,\noui, devant tout son peuple,\nà l'entrée de la maison du Seigneur,\nau milieu de Jérusalem ! Alléluia !"}],"evangile":{"reference":"saint Luc ( 9 : 10 - 17 )","texte":"10\n Quand les Apôtres revinrent, ils racontèrent à\nJésus tout ce qu'ils avaient fait. Alors Jésus, les\nprenant avec lui, partit à l'écart dans unes ville\nappelée Bethsaïde. 11 La foule s'en aperçut et le\nsuivit. Il leur fit bon accueil ; il leur parlait du règne de\nDieu, et il guérissait ceux qui en avaient besoin.\n12\n Le jour commençait à baisser. Les Douze\ns'approchèrent de lui et lui dirent : Renvoie la foule,\nils pourront aller dans les villages et les fermes des\nenvirons pour y loger et trouver de quoi manger : ici\nnous sommes dans un endroit désert. + 13 Mais il leur\ndit : Donnez-leur vous-mêmes à manger.+ Ils\nrépondirent : Nous n'avons pas plus de cinq pains\net deux poissons... à moins d'aller nous-mêmes\nacheter de la nourriture pour tout ce monde. 14 Il y\navait bien cinq mille hommes.\nJésus dit à ses disciples : Faîtes les asseoir par\ngroupe de cinquante.+ 15 Ils obéirent et firent asseoir\ntout le monde. 16 Jésus prit les cinq pains et les deux\npoissons, et, levant les yeux au ciel, il les bénit, les\nrompit et les donna à ses disciples pour qu'ils\ndistribuent à tout le monde. 17 Tous mangèrent à leur\nfaim et l'on ramassa les morceaux qui restaient : cela\nremplit douze paniers.\nGloire à Dieu à jamais !"}},"vepres":{"nom":"Vêpres","heure":"18h00","commemoration":"Descente du Corps du Christ de la Croix","psaumes":[{"titre":"Psaume 116","texte":"Louez le Seigneur, tous les peuples ;\nfêtez-le tous les pays !\nSon amour envers nous s'est montré le plus fort ;\néternelle est la fidélité du Seigneur !  Alléluia !"},{"titre":"Psaume 119","texte":"Dans ma détresse, j'ai crié vers le Seigneur,\net lui m'a répondu.\nSeigneur délivre-moi de la langue perfide,\net de la bouche qui ment.\n\nQue t'infliger, ô langue perfide\net qu'ajouter encore ?\nLa flèche meurtrière du guerrier,\net la braise des genêts.\n\nMalheur à moi : je dois vivre en exil\net camper dans un désert !\n\nTrop longtemps, j'ai vécu parmi ces gens\nqui haïssent la paix.\nJe ne veux que la paix, mais quand je parle\nils cherchent la guerre. Alléluia !"},{"titre":"Psaume 120","texte":"Je lève les yeux vers les montagnes :\nd'où le secours me viendra-t-il ?\n\nLe secours me viendra du Seigneur\nqui a fait le ciel et la terre.\n\nQu'il empêche ton pied de glisser,\nqu'il ne dorme pas, ton gardien.\nNon, il ne dort pas, ne sommeille pas,\nle gardien d'Israël.\n\nLe Seigneur, ton gardien, le Seigneur, ton ombrage,\nse tient près de toi.\nLe soleil, pendant le jour, ne pourra te frapper,\nni la lune durant la nuit.\n\nLe Seigneur te gardera de tout mal,\nIl gardera ta vie.\nLe Seigneur te gardera, au départ et au retour,\nmaintenant et à jamais. Alléluia !"},{"titre":"Psaume 123","texte":"Sans le Seigneur qui était pour nous,\n- qu'Israël le redise -\nsans le Seigneur qui était pour nous\nquand des hommes nous assaillirent,\nalors ils nous avalaient tout vivants,\ndans le feu de leur colère.\n\nAlors le flot passait sur nous,\nle torrent nous submergeait ;\nalors nous étions submergés\npar les flots en furie.\n\nBéni soit le Seigneur\nqui n'a pas fait de nous\nla proie de leurs dents!\n\nComme un oiseau, nous avons échappé\nau filet du chasseur ;\nle filet s'est rompu :\nnous avons échappé.\n\nNotre secours est le nom du Seigneur\nqui a fait le ciel et la terre. Alléluia !"},{"titre":"Psaume 124","texte":"Qui s'appuie sur le Seigneur\nressemble au mont Sion :\nil est inébranlable,\nil demeure à jamais.\n\nJérusalem, des montagnes l'entourent ;\nainsi le Seigneur : il entoure son peuple\nmaintenant et toujours.\n\nJamais le sceptre de l'impie\nne pèsera sur la part des justes,\nde peur que la main des justes\nne se tende vers l'idole.\n\nSois bon pour moi qui est bon, Seigneur,\npour l'homme au cœur droit.\nMais ceux qui rusent et qui trahissent,\nque le Seigneur les rejette avec les méchants !\n\nPaix sur Israël ! Alléluia !"},{"titre":"Psaume 125","texte":"Quand le Seigneur ramena les captifs de Sion,\nnous étions comme en rêve !\n\nAlors notre bouche était pleine de rire,\nnous poussions des cris de joie ;\nalors on disait parmi les nations :\n\nAQuelles merveilles fait pour eux le Seigneur !@\nQuelles merveilles le Seigneur fit pour nous :\nnous étions en grande fête !\n\nRamène, Seigneur, nos captifs,\ncomme les torrents au désert.\n\nQui sème dans les larmes\nmoissonne dans la joie :\nil s'en va, il s'en va en pleurant,\nil jette la semence ;\nil s'en vient, il s'en vient dans la joie,\nil rapporte les gerbes. Alléluia !"},{"titre":"Psaume 126","texte":"Si le Seigneur ne bâtit la maison,\nles bâtisseurs travaillent en vain ;\nsi le Seigneur ne garde la ville,\nc'est en vain que veillent les gardes.\n\nEn vain tu devances le jour,\ntu retardes le moment de ton repos,\ntu manges un pain de douleur :\nDieu comble son bien-aimé quand il dort.\n\nDes fils, voilà ce que donne le Seigneur,\ndes enfants, la récompense qu'il accorde ;\ncomme les flèches aux mains d'un guerrier,\nainsi les fils de la jeunesse.\n\nHeureux l'homme vaillant\nqui a garni son carquois de telles armes !\nS'ils affrontent leurs ennemis sur la place,\nils ne seront pas humiliés. Alléluia !"},{"titre":"Psaume 128","texte":"Que de mal ils m'ont fait dès ma jeunesse,\n- à Israël de le dire -\n\nque de mal ils m'ont fait dès ma jeunesse :\nils ne m'ont pas soumis.\n\nSur mon dos, des laboureurs ont labouré\net creusé leurs sillons ;\nmais le Seigneur, le juste,\na brisé l'attelage des impies.\n\nQu'ils soient tous humiliés, rejetés,\nles ennemis de Sion !\nQu'ils deviennent comme l'herbe des toits,\naussitôt desséchée !\n\nLes moissonneurs n'en font pas une poignée,\nni les lieurs une gerbe,\net les passants ne peuvent leur dire ;\n* La bénédiction du Seigneur soit sur vous ! +\n\nAu nom du Seigneur, nous vous bénissons.\n Alléluia !"}],"evangile":{"reference":"saint Luc ( 4 : 38 - 41 )","texte":"38\n En quittant la synagogue, Jésus entra chez Simon.\nOr la belle-mère de Simon était oppressée par une\nforte fièvre, et on implora Jésus en sa faveur. 39 Il se\npencha sur elle, interpella vivement la fièvre, et celle-\nci quitta la malade. A l'instant même, elle se leva, et\nelle les servait.\n 40\n Au coucher du soleil, tous ceux qui avaient\ndes infirmes atteints de diverses maladies les lui\namenèrent. Et Jésus, imposant les mains à chacun\nd'eux, les guérissait. 41 Des esprits mauvais sortaient\nde beaucoup d'entre eux en criant : Tu es le Fils de\nDieu ! + Mais Jésus les interpellait vivement et leur\ninterdisait de parler parce qu'ils savaient, eux, qu'il\nétait le Messie.\nGloire à Dieu à jamais !"}},"complies":{"nom":"Complies","heure":"21h00","commemoration":"Mise au tombeau du Corps du Christ","psaumes":[{"titre":"Psaume 129","texte":"Des profondeurs je crie vers Toi, Seigneur,\nSeigneur écoute mon appel !\nQue ton oreille se fasse attentive\nau cri de ma prière !\n\nSi Tu retiens les fautes, Seigneur\nSeigneur, qui subsistera ?\nMais près de Toi se trouve le pardon\npour que l'homme Te craigne.\n\nJ'espère le Seigneur de toute mon âme ;\nje l'espère, et j'attends sa parole.\n\nMon âme attend le Seigneur\nplus qu'un veilleur ne guette l'aurore.\nPlus qu'un veilleur ne guette l'aurore,\nattends le Seigneur, Israël.\n\nOui, près du Seigneur, est l'amour ;\nprès de Lui, abonde le rachat\nC'est Lui qui rachètera Israël\nde toutes ses fautes. Alléluia !"},{"titre":"Psaume 130","texte":"Seigneur je n'ai pas le cœur fier\nni le regard ambitieux ;\nje ne poursuis ni grands desseins,\nni merveilles qui me dépassent.\n\nNon, mais je tiens mon âme\négale et silencieuse ;\nmon âme est en moi comme un enfant,\ncomme un petit enfant contre sa mère.\n\nAttends le Seigneur, Israël,\nmaintenant et à jamais. Alléluia !"},{"titre":"Psaume 131","texte":"Souviens-toi, Seigneur, de David\net de sa grande soumission\nquand il fit au Seigneur un serment,\nune promesse au Puissant de Jacob :\n\n\" Jamais je n'entrerai sous ma tente,\net jamais je ne m'étendrai sur mon lit,\nj'interdirai tout sommeil à mes yeux\net tout répit à mes paupières,\n\navant d'avoir trouvé un lieu pour le Seigneur,\nune demeure pour le Puissant de Jacob.\"\n\nVoici qu'on nous l'annonce à Éphrata,\nnous l'avons trouvée près de Yagar,\nEntrons dans la demeure de Dieu,\nprosternons-nous aux pieds de son trône.\n\nMonte, Seigneur, vers le lieu de ton repos,\ntoi, et l'arche de ta force !\nQue tes prêtres soient vêtus de justice,\nque tes fidèles crient de joie !\n\nPour l'amour de Dieu, ton serviteur,\nne repousse pas la face de ton messie.\n\nLe Seigneur l'a juré à David,\net jamais il ne reprendra sa parole :\n\"C'est un homme issu de toi\nque je placerai sur ton trône.\n\n\"Si tes fils gardent mon alliance,\nles volontés que je leur fais connaître,\nleurs fils, eux aussi, à tout jamais,\nsiégeront sur le trône dressé pour toi.\"\n\nCar le Seigneur a fait choix de Sion ;\nelle est le séjour qu'il désire :\n\"Voilà mon repos à tout jamais,\nc'est le séjour que j'avais désiré.\n\n\"Je bénirai, je bénirai ses récoltes\npour rassasier de pain ses pauvres.\nJe vêtirai de gloire ses prêtres,\net ses fidèles crieront, crieront de joie.\n\n\"Là, je ferai germer la force de David ;\npour mon messie, j'ai allumé une lampe.\nJe vêtirai ses ennemis de honte,\nmais, sur lui, la couronne fleurira.\" Alléluia !"},{"titre":"Psaume 132","texte":"Oui, il est bon, il est doux pour des frères\nde vivre ensemble et d'être unis !\n\nOn dirait un baume précieux,\nun parfum sur la tête,\nqui descend sur la barbe, la barbe d'Aaron,\nqui descend sur le bord de son vêtement.\n\nOn dirait la rosée de l'Hermon\nqui descend sur les collines de Sion.\nC'est là que le Seigneur envoie la bénédiction,\nla vie pour toujours. Alléluia !"},{"titre":"Psaume 133","texte":"Vous tous, bénissez le Seigneur,\nvous qui servez le Seigneur,\nqui veillez dans la maison du Seigneur\nau long des nuits.\n\nLevez les mains vers le sanctuaire,\net bénissez le Seigneur.\nQue le Seigneur te bénisse de Sion,\nlui qui a fait le ciel et la terre !\nGloire à Toi Ami du genre humain.\n\n Premier service\n\nQue ma supplication parvienne devant Toi ô\nSeigneur, fais moi comprendre selon Ta parole. Que\nparvienne devant Toi ma supplique, selon Ta parole\ndonne moi la vie. Mes lèvres débordent de louanges\nquand Tu m'apprends Tes droits. Ma langue répète\nTes paroles, car tous Tes commandements sont\njustes. Que Ta main me sauve car j'ai désiré Tes\ncommandements. J'ai désiré ardemment Ton Salut,\nSeigneur. Ta Loi est mon langage. Mon âme vit et\nTe loue, et Tes commandements me soutiennent.\nJe me suis égaré comme la brebis perdue. Rappelle\nTon serviteur car je n'oublie point Tes\ncommandements.\nGloire au Père, au Fils et au Saint-Esprit.\nMaintenant, pour toujours et pour les siècles des\nsiècles, Amen.\nGloire au Père, au Fils et au Saint Esprit, dès\nmaintenant et jusqu'à la fin de tous les temps Amen.\nGloire à Toi, Ami du genre humain car Tu es bon.\nSalut à Ta Mère la sainte Vierge et à tous Tes\nSaints.\nGloire à Toi, O Trinité Sainte aie pitié de nous.\nQue Dieu se lève et que tous ses ennemis soient\ndispersés, et que fuient devant sa face tous ceux qui\nhaïssent Son Saint Nom, et que Ton peuple soit\n\n Premier service\n\nmultiplié par Ta bénédiction par milliers et par mil-\nlions qui agissent selon Ta sainte Volonté.\nO Seigneur, ouvre mes lèvres, et que ma bouche\nprononce Ta louange.\nAmen, Alléluia !"},{"titre":"Psaume 136","texte":"Au bord des fleuves de Babylone\nnous étions assis et nous pleurions\nnous souvenant de Sion ;\naux saules des alentours\nnous avions pendu nos harpes.\n\nC'est là que nos vainqueurs\nnous demandèrent des chansons,\net nos bourreaux, des airs joyeux :\n\"Chantez-nous, disaient-ils,\nquelque chant de Sion.\"\n\nComment chanterions-nous\nun chant du Seigneur\nsur une terre étrangère ?\nSi je t'oublie, Jérusalem,\nque ma main droite m'oublie !\n\nJe veux que ma langue\ns'attache à mon palais\nsi je perds ton souvenir,\nsi je n'élève Jérusalem,\nau sommet de ma joie.\n\nSouviens-toi, Seigneur,\ndes fils d'Édom,\net de ce jour à Jérusalem\noù ils criaient : \"Détruisez-la,\ndétruisez-la de fond en comble !\"\n\nO Babylone misérable,\nheureux qui te revaudra\nles maux que tu nous valus ;\nheureux qui saisira tes enfants,\npour les briser contre le roc ! Alléluia !"},{"titre":"Psaume 137","texte":"De tout mon cœur, Seigneur, je te rends grâce :\ntu as entendu les paroles de ma bouche.\nJe te chante en présence des anges,\nvers ton temple sacré, je me prosterne.\n\nJe rends grâce à ton nom pour ton amour et ta\nvérité,\ncar tu élèves, au dessus de tout, ton nom et ta\nparole.\nLe jour où tu répondis à mon appel,\ntu fis grandir en mon âme la force.\n\nTous les rois de la terre te rendent grâce\nquand ils entendent les paroles de ta bouche.\nIls chantent les chemins du Seigneur :\n\"Qu'elle est grande, la gloire du Seigneur !\"\n\nSi haut que soit le Seigneur, il voit le plus humble ;\nde loin il reconnaît l'orgueilleux.\nSi je marche au milieu des angoisses,\ntu me fais vivre,\nta main s'abat sur mes ennemis en colère.\n\nTa droite me rend vainqueur\nLe Seigneur fait tout pour moi !\nSeigneur, éternel est ton amour :\nn'arrête pas l'œuvre de tes mains. Alléluia !"},{"titre":"Psaume 140","texte":"Seigneur, je t'appelle : accours vers moi !\nÉcoute mon appel quand je crie vers toi !\nQue ma prière devant toi s'élève comme un encens,\net mes mains, comme l'offrande du soir.\n\nMets une garde à mes lèvres, Seigneur,\nveille au seuil de ma bouche.\nNe laisse pas mon cœur pencher vers le mal\nni devenir complice des hommes malfaisants.\n\nJamais je ne goûterai leurs plaisirs :\nque le juste me reprenne et me corrige avec bonté.\nQue leurs parfums, ni leurs poisons,\nne touchent ma tête !\nIls font du mal : je me tiens en prière.\n\nVoici leurs juges précipités contre le roc,\neux qui prenaient plaisir à m'entendre dire :\n\"Comme un sol qu'on retourne et défonce,\nnos os sont dispersés à la gueule des enfers !\"\n\nJe regarde vers toi, Seigneur, mon Maître ;\ntu es mon refuge : épargne ma vie !\nGarde-moi du filet qui m'est tendu,\ndes embûches qu'ont dressés les malfaisants.\n\nLes impies tomberont dans leur piège ;\nseul, moi, je passerai. Alléluia !"},{"titre":"Psaume 141","texte":"A pleine voix, je crie vers le Seigneur !\nA pleine voix, je supplie le Seigneur !\nJe répands devant lui ma plainte,\ndevant lui, je dis ma détresse.\n\nLorsque le souffle me manque,\ntoi, tu sais mon chemin.\nSur le sentier où j'avance,\nun piège m'est tendu.\n\nRegarde à mes côtés, et vois :\npersonne qui me connaisse !\nPour moi, il n'est plus de refuge :\npersonne qui pense à moi !\n\nJ'ai crié vers toi, Seigneur !\nJ'ai dit : \"Tu es mon abri,\nma part, sur la terre des vivants.\"\n\nSois attentif à mes appels :\nje suis réduit à rien ;\ndélivre-moi de ceux qui me poursuivent :\nils sont plus forts que moi.\n\nTire-moi de la prison où je suis,\nque je rende grâce à ton nom.\nAutour de moi, les justes feront cercle\npour le bien que tu m'as fait. Alléluia !"},{"titre":"Psaume 145","texte":"Chante, ô mon âme, la louange du Seigneur !\nJe veux louer le Seigneur tant que je vis,\nchanter mes hymnes pour mon Dieu tant que je\ndure.\n\nNe comptez pas sur les puissants,\ndes fils d'homme qui ne peuvent sauver !\nLeur souffle s'en va : ils retournent à la terre ;\net ce jour-là, périssent leurs projets.\n\nHeureux qui s'appuie sur le Dieu de Jacob,\nqui met son espoir dans le Seigneur son Dieu,\nlui qui a fait le ciel et la terre\net la mer et tout ce qu'ils renferment !\n\nIl garde à jamais sa fidélité,\nil fait justice aux opprimés ;\naux affamés, il donne le pain ;\nle Seigneur délie les enchaînés.\n\nLe Seigneur ouvre les yeux des aveugles,\nle Seigneur redresse les accablés,\nle Seigneur aime les justes,\nle Seigneur protège l'étranger.\n\nIl soutient la veuve et l'orphelin,\nil égare les pas du méchant.\nD'âge en âge, le Seigneur régnera :\nton Dieu, ô Sion, pour toujours ! Alléluia !"},{"titre":"Psaume 146","texte":"Il est bon de fêter notre Dieu,\nil est beau de chanter sa louange !\nLe Seigneur rebâtit Jérusalem,\nil rassemble les déportés d'Israël ;\nil guérit les cœurs brisés\net soigne leurs blessures.\n\nIl compte le nombre des étoiles,\nil donne à chacune un nom ;\nil est grand, il est fort, notre Maître :\nnul n'a mesuré son intelligence.\n\nLe Seigneur élève les humbles\net rabaisse jusqu'à terre les impies.\n\nEntonnez pour le Seigneur l'action de grâce,\njouez pour notre Dieu sur la cithare !\n\nIl couvre le ciel de nuages,\nil prépare la pluie pour la terre ;\nil fait germer l'herbe sur les montagnes\net les plantes pour l'usage des hommes ;\nil donne leur pâture aux troupeaux,\naux petits corbeaux qui la réclament.\n\nLa force des chevaux n'est pas ce qu'il aime,\nni la vigueur de guerriers, ce qui lui plaît;\nmais le Seigneur se plaît avec ceux qui le craignent,\navec ceux qui espèrent en son amour. Alléluia !"}],"evangile":{"reference":"saint Luc ( 2 : 25 - 32 )","texte":"25\n Or, il y'avait à Jérusalem un homme appelé\nSiméon. C'était un homme juste et religieux, qui\nattendait la Consolidation d'Israël, et l'Esprit Saint\nétait sur lui. 26 L'Esprit lui avait révélé qu'il ne verrait\npas la mort avant d'avoir vu le Messie du Seigneur.\n27\n Poussé par l'Esprit, Siméon vint au Temple. Les\nparents y entraient avec l'enfant Jésus pour\naccomplir les rites de la Loi qui le concernaient.\n28\n Siméon prit l'enfant dans ses bras, et il bénit Dieu\nen disant : 29 \"Maintenant ô Maître, tu peux laisser\nton serviteur s'en aller dans la paix, selon ta parole.\n30\n Car mes yeux ont vu ton salut, 31 que tu as\npréparé à la face de tous les peuples : 32 lumière\npour éclairer les nations païennes, et gloire d'Israël\nton peuple."}},"minuit":{"nom":"Minuit","heure":"0h00","commemoration":"Parabole des dix vierges — Veille avec le Christ","psaumes":[{"titre":"Psaume 133","texte":"Vous tous, bénissez le Seigneur,\nvous qui servez le Seigneur,\nqui veillez dans la maison du Seigneur\nau long des nuits.\n\nLevez les mains vers le sanctuaire,\net bénissez le Seigneur.\nQue le Seigneur te bénisse de Sion,\nlui qui a fait le ciel et la terre !\nGloire à Toi Ami du genre humain.\n\n Premier service\n\nQue ma supplication parvienne devant Toi ô\nSeigneur, fais moi comprendre selon Ta parole. Que\nparvienne devant Toi ma supplique, selon Ta parole\ndonne moi la vie. Mes lèvres débordent de louanges\nquand Tu m'apprends Tes droits. Ma langue répète\nTes paroles, car tous Tes commandements sont\njustes. Que Ta main me sauve car j'ai désiré Tes\ncommandements. J'ai désiré ardemment Ton Salut,\nSeigneur. Ta Loi est mon langage. Mon âme vit et\nTe loue, et Tes commandements me soutiennent.\nJe me suis égaré comme la brebis perdue. Rappelle\nTon serviteur car je n'oublie point Tes\ncommandements.\nGloire au Père, au Fils et au Saint-Esprit.\nMaintenant, pour toujours et pour les siècles des\nsiècles, Amen.\nGloire au Père, au Fils et au Saint Esprit, dès\nmaintenant et jusqu'à la fin de tous les temps Amen.\nGloire à Toi, Ami du genre humain car Tu es bon.\nSalut à Ta Mère la sainte Vierge et à tous Tes\nSaints.\nGloire à Toi, O Trinité Sainte aie pitié de nous.\nQue Dieu se lève et que tous ses ennemis soient\ndispersés, et que fuient devant sa face tous ceux qui\nhaïssent Son Saint Nom, et que Ton peuple soit\n\n Premier service\n\nmultiplié par Ta bénédiction par milliers et par mil-\nlions qui agissent selon Ta sainte Volonté.\nO Seigneur, ouvre mes lèvres, et que ma bouche\nprononce Ta louange.\nAmen, Alléluia !"},{"titre":"Psaume 118","texte":"-I-\nHeureux les hommes intègres dans leurs voies\nqui marchent suivant la Loi du Seigneur !\nHeureux ceux qui gardent ses exigences,\nils le cherchent de tout cœur !\nJamais ils ne commettent d'injustice,\nils marchent dans ses voies.\nToi, Tu promulgues des préceptes\nà observer entièrement.\nPuissent mes voies s'affermir\nà observer Tes commandements !\nAinsi je ne serai pas humilié\nquand je contemple tes volontés.\nD'un cœur droit, je pourrai Te rendre grâce,\n Premier service"}],"evangile":{"reference":"saint Matthieu ( 25 : 1 - 13 )","texte":"1\n \"Alors le royaume des cieux sera comparable à\ndix jeunes filles invitées à des noces, qui prirent\nleurs lampes et s'en allèrent à la rencontre de\nl'époux. 2 Cinq d'entre elles étaient insensées, et\ncinq étaient prévoyantes : 3 les insensées avaient\npris leurs lampes sans emporter d'huile, 4 tandis que\nles prévoyantes avaient pris, avec leurs lampes, de\n Premier service"}}};
+
+// ═══════════════════════════════════════════════════════════════
+// CALENDRIER COPTE
+// ═══════════════════════════════════════════════════════════════
+const CM=['Thout','Baba','Hathor','Kiahk','Tobi','Amshir','Baramhat','Baramouda','Bashans','Baounah','Abib','Misra','Nasie'];
+const GM=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const DAYS_FR=['L','M','M','J','V','S','D'];
+function jdnGreg(y,m,d){const a=Math.floor((14-m)/12),y2=y+4800-a,m2=m+12*a-3;return d+Math.floor((153*m2+2)/5)+365*y2+Math.floor(y2/4)-Math.floor(y2/100)+Math.floor(y2/400)-32045;}
+const _AJ=jdnGreg(2026,6,25),_AN=Math.floor(1461*1742/4)+9*30+17,OFFSET=_AJ-_AN;
+function g2c(date){const j=jdnGreg(date.getFullYear(),date.getMonth()+1,date.getDate()),n=j-OFFSET,yc=Math.floor((4*n+3)/1461),doc=n-Math.floor(1461*yc/4),mc=Math.min(Math.floor(doc/30),12),dc=mc<12?(doc%30)+1:(doc-360+1);return{y:yc,m:CM[mc],d:dc,mi:mc};}
+function c2g(yc,mi,dc){const n=Math.floor(1461*yc/4)+mi*30+(dc-1),j=n+OFFSET,a=j+32044,b=Math.floor((4*a+3)/146097),c=a-Math.floor(146097*b/4),d2=Math.floor((4*c+3)/1461),e=c-Math.floor(1461*d2/4),m2=Math.floor((5*e+2)/153);return new Date(100*b+d2-4800+Math.floor(m2/10),m2+3-12*Math.floor(m2/10)-1,e-Math.floor((153*m2+2)/5)+1);}
+function jsDayToFr(d){return(d+6)%7;}
+function dayOfYear(d){return Math.floor((d-new Date(d.getFullYear(),0,0))/86400000);}
+function psaumeOfDay(key,date){const h=AGPEYA[key];if(!h||!h.psaumes.length)return null;return h.psaumes[dayOfYear(date)%h.psaumes.length];}
+
+// ═══════════════════════════════════════════════════════════════
+// ÉTAT
+// ═══════════════════════════════════════════════════════════════
+const TODAY=new Date();TODAY.setHours(0,0,0,0);
+let currentDate=new Date(TODAY);
+function getKey(d=currentDate){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function isToday(){return getKey()===getKey(TODAY);}
+
+// Prefs
+const ALL_DAYS=[0,1,2,3,4,5,6];
+// prefs[key] = {on: bool, days: [0..6]}
+const prefs={
+  agpeya_prime:    {on:false,days:[...ALL_DAYS]},
+  agpeya_tierce:   {on:false,days:[...ALL_DAYS]},
+  agpeya_sexte:    {on:false,days:[...ALL_DAYS]},
+  agpeya_none:     {on:false,days:[...ALL_DAYS]},
+  agpeya_vepres:   {on:false,days:[...ALL_DAYS]},
+  agpeya_complies: {on:false,days:[...ALL_DAYS]},
+  agpeya_minuit:   {on:false,days:[...ALL_DAYS]},
+  lect_veille:     {on:false,days:[...ALL_DAYS]},
+  lect_matin:      {on:false,days:[...ALL_DAYS]},
+  lect_paul:       {on:false,days:[...ALL_DAYS]},
+  lect_cath:       {on:false,days:[...ALL_DAYS]},
+  lect_actes:      {on:false,days:[...ALL_DAYS]},
+  lect_mpe:        {on:false,days:[...ALL_DAYS]},
+  synax:           {on:true, days:[...ALL_DAYS]},
+};
+let confFreq=4;
+let confLastDate='';
+let confActive=true;
+function savePrefs(){try{localStorage.setItem('k_prefs',JSON.stringify({prefs,confFreq,confLastDate,confActive}));}catch(e){}}
+function loadPrefs(){try{const s=localStorage.getItem('k_prefs');if(s){const d=JSON.parse(s);if(d.prefs)Object.entries(d.prefs).forEach(([k,v])=>{if(prefs[k])Object.assign(prefs[k],v);});if(d.confFreq)confFreq=d.confFreq;if(d.confLastDate)confLastDate=d.confLastDate;if(d.confActive!==undefined)confActive=d.confActive;}}catch(e){}}
+
+// Progression (done = set of item keys pour chaque section)
+// Format: doneItems = { "agpeya_prime": true, "lect_veille_0": true, ... }
+let doneItems={};
+function saveDone(){try{
+  const key=getKey(TODAY);
+  localStorage.setItem('k_done',JSON.stringify({date:key,items:doneItems}));
+  if(Object.keys(doneItems).length>0){
+    const s=localStorage.getItem('k_streak_days');
+    const days=s?JSON.parse(s):[];
+    if(!days.includes(key)){days.push(key);localStorage.setItem('k_streak_days',JSON.stringify(days));}
+  }
+}catch(e){}}
+function calcStreak(){
+  try{
+    const days=new Set(JSON.parse(localStorage.getItem('k_streak_days')||'[]'));
+    let n=0;const d=new Date(TODAY);
+    while(true){
+      const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      if(!days.has(k))break;
+      n++;d.setDate(d.getDate()-1);
+    }
+    return n;
+  }catch(e){return 0;}
+}
+function loadDone(){try{const s=localStorage.getItem('k_done');if(!s)return;const d=JSON.parse(s);if(d.date===getKey(TODAY))doneItems=d.items||{};}catch(e){}}
+function isDone(key){return !!doneItems[key];}
+function setDone(key,val){if(val)doneItems[key]=true;else delete doneItems[key];saveDone();}
+
+// Données lectures
+let lectData=null,synaxData=null;
+
+// Navigation
+let screenStack=['home'];
+let currentSection=null; // 'agpeya'|'lect'|'synax'
+let currentItemKey=null; // clé de l'item en cours de lecture
+
+const HOUR_KEYS=['prime','tierce','sexte','none','vepres','complies','minuit'];
+const HOUR_ICO={prime:{bg:'#FEF3C7',ic:'#D97706',icon:'ti-sun'},tierce:{bg:'#FEF9EC',ic:'#B45309',icon:'ti-sun-high'},sexte:{bg:'#FFF7ED',ic:'#EA580C',icon:'ti-sun-filled'},none:{bg:'#F0F9FF',ic:'#0284C7',icon:'ti-cloud-sun'},vepres:{bg:'#FDF4FF',ic:'#9333EA',icon:'ti-sunset-2'},complies:{bg:'#F5F3FF',ic:'#7C3AED',icon:'ti-moon'},minuit:{bg:'#EFF6FF',ic:'#2563EB',icon:'ti-moon-stars'}};
+
+function getDayFr(d){return(d.getDay()+6)%7;}
+function activeHourKeys(){
+  const fr=getDayFr(currentDate);
+  return HOUR_KEYS.filter(k=>{const p=prefs['agpeya_'+k];return p&&p.on&&p.days.includes(fr);});
+}
+function isActiveToday(key){
+  const fr=getDayFr(currentDate);
+  const p=prefs[key];return p&&p.on&&p.days.includes(fr);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CHARGEMENT DONNÉES
+// ═══════════════════════════════════════════════════════════════
+async function loadData(){
+  try{
+    const [lr,sr]=await Promise.all([
+      fetch('data/lectionnaire-2026.json').then(r=>r.json()),
+      fetch('data/synaxaire-2026.json').then(r=>r.json())
+    ]);
+    lectData=lr.readings||lr;
+    synaxData=sr;
+    renderHome();
+  }catch(e){console.error('Erreur chargement:',e);}
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NAVIGATION (slide entre écrans)
+// ═══════════════════════════════════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{
+    s.classList.remove('offright','offleft');
+    if(s.id!==id)s.classList.add('offright');
+  });
+  // Fermer params différemment
+}
+function goTo(id){
+  const prev=document.getElementById('screen-'+screenStack[screenStack.length-1]);
+  const next=document.getElementById('screen-'+id);
+  if(prev)prev.classList.add('offleft');
+  next.classList.remove('offright','offleft');
+  screenStack.push(id);
+}
+function goBack(){
+  if(screenStack.length<=1)return;
+  const curr=document.getElementById('screen-'+screenStack.pop());
+  const prev=document.getElementById('screen-'+screenStack[screenStack.length-1]);
+  curr.classList.add('offright');
+  prev.classList.remove('offleft','offright');
+  // Restaurer la nav
+  const top=screenStack[screenStack.length-1];
+  if(top==='home')setActiveNav('today');
+  else if(top==='params')setActiveNav('prog');
+}
+function goBackToList(){
+  if(screenStack.length<=1)return;
+  const curr=document.getElementById('screen-'+screenStack.pop());
+  const prev=document.getElementById('screen-'+screenStack[screenStack.length-1]);
+  curr.classList.add('offright');
+  prev.classList.remove('offleft','offright');
+  // Rafraîchir la liste pour mettre à jour les coches
+  renderList(currentSection);
+}
+function goHome(){
+  screenStack=['home'];
+  document.querySelectorAll('.screen').forEach(s=>{
+    s.classList.toggle('offright',s.id!=='screen-home');
+    s.classList.remove('offleft');
+  });
+  setActiveNav('today');
+  renderHome();
+}
+function goParams(){
+  const curr=document.getElementById('screen-'+screenStack[screenStack.length-1]);
+  if(curr)curr.classList.add('offleft');
+  const params=document.getElementById('screen-params');
+  params.classList.remove('offright','offleft');
+  screenStack.push('params');
+  setActiveNav('prog');
+  // Réinitialiser les sections params (vider et reconstruire)
+  ['agpeya-pcard','lect-pcard','autres-pcard'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.innerHTML='';
+  });
+  buildParams();
+}
+function setActiveNav(id){
+  document.getElementById('nav-today').classList.toggle('active',id==='today');
+  document.getElementById('nav-prog').classList.toggle('active',id==='prog');
+  // Sidebar desktop
+  const sbT=document.getElementById('sb-today');
+  const sbP=document.getElementById('sb-params');
+  if(sbT)sbT.classList.toggle('active',id==='today');
+  if(sbP)sbP.classList.toggle('active',id==='prog');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DATE
+// ═══════════════════════════════════════════════════════════════
+function updateDateDisplay(){
+  const c=g2c(currentDate),d=currentDate;
+  document.getElementById('pillGreg').textContent=d.getDate()+' '+GM[d.getMonth()]+' '+d.getFullYear();
+  document.getElementById('pillCop').textContent=c.d+' '+c.m+' '+c.y;
+  renderWeekDots();
+  const wrap=document.getElementById('todayReturnWrap');
+  wrap.innerHTML=isToday()?'':`<div style="padding:0 14px 6px"><button class="today-btn" onclick="goToday()"><i class="ti ti-calendar-today" style="font-size:14px"></i> Revenir à aujourd'hui</button></div>`;
+}
+function renderWeekDots(){
+  const el=document.getElementById('weekDots');el.innerHTML='';
+  const dispFr=jsDayToFr(currentDate.getDay()),todayFr=jsDayToFr(TODAY.getDay());
+  DAYS_FR.forEach((lbl,i)=>{const div=document.createElement('div');div.className=isToday()?(i<todayFr?'wd d':i===todayFr?'wd t':'wd e'):(i===dispFr?'wd t':'wd e');div.textContent=lbl;el.appendChild(div);});
+}
+function shiftDay(n){currentDate=new Date(currentDate);currentDate.setDate(currentDate.getDate()+n);updateDateDisplay();renderHome();}
+function goToday(){currentDate=new Date(TODAY);updateDateDisplay();renderHome();}
+
+// PICKER
+let pickerTab='greg',selectedCopMi=null;
+function openPicker(){
+  const d=currentDate,c=g2c(d);
+  document.getElementById('g-day').innerHTML=[...Array(31)].map((_,i)=>`<option${i+1===d.getDate()?' selected':''}>${i+1}</option>`).join('');
+  document.getElementById('g-month').innerHTML=GM.map((m,i)=>`<option value="${i}"${i===d.getMonth()?' selected':''}>${m}</option>`).join('');
+  document.getElementById('g-year').innerHTML=[2025,2026,2027].map(y=>`<option${y===d.getFullYear()?' selected':''}>${y}</option>`).join('');
+  selectedCopMi=c.mi;renderCopMonths();
+  document.getElementById('cop-day').innerHTML=[...Array(c.mi===12?6:30)].map((_,i)=>`<option${i+1===c.d?' selected':''}>${i+1}</option>`).join('');
+  document.getElementById('cop-year').innerHTML=[1741,1742,1743,1744].map(y=>`<option${y===c.y?' selected':''}>${y}</option>`).join('');
+  document.getElementById('overlay').classList.add('show');
+}
+function renderCopMonths(){document.getElementById('cop-months').innerHTML=CM.map((m,i)=>`<div class="cop-month-btn${i===selectedCopMi?' sel':''}" onclick="selectCopMonth(${i})">${m}</div>`).join('');}
+function selectCopMonth(i){selectedCopMi=i;renderCopMonths();}
+function closePicker(){document.getElementById('overlay').classList.remove('show');}
+function overlayClick(e){if(e.target===document.getElementById('overlay'))closePicker();}
+function switchTab(t){pickerTab=t;['greg','cop'].forEach(k=>{document.getElementById('tab-'+k).classList.toggle('active',k===t);document.getElementById('panel-'+k).classList.toggle('show',k===t);});}
+function applyGreg(){const d=parseInt(document.getElementById('g-day').value),m=parseInt(document.getElementById('g-month').value),y=parseInt(document.getElementById('g-year').value);currentDate=new Date(y,m,d);closePicker();updateDateDisplay();renderHome();}
+function applyCop(){const dc=parseInt(document.getElementById('cop-day').value),yc=parseInt(document.getElementById('cop-year').value);currentDate=c2g(yc,selectedCopMi,dc);closePicker();updateDateDisplay();renderHome();}
+
+// TOAST
+let toastTmr=null;
+function toast(msg){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;t.classList.add('show');clearTimeout(toastTmr);toastTmr=setTimeout(()=>t.classList.remove('show'),2000);}
+
+// ═══════════════════════════════════════════════════════════════
+// ACCUEIL — cartes de section
+// ═══════════════════════════════════════════════════════════════
+function renderHome(){
+  renderWeekDots();
+  updateProgress();
+  const streak=calcStreak();
+  const n=document.getElementById('streakNum');
+  if(n){
+    n.textContent=streak;
+    document.getElementById('streakLabel').textContent=streak<=1?'jour de suite':'jours de suite';
+    document.getElementById('streakSub').textContent=streak===0?"Commence aujourd'hui !":streak<7?'Continue !':'Excellent, persévère !';
+  }
+
+  const el=document.getElementById('homeSections');
+  el.innerHTML='';
+
+  // Helper pour ajouter un label de section
+  function addLabel(text){const d=document.createElement('div');d.className='sec-label';d.textContent=text;el.appendChild(d);}
+
+  // Agpeya — filtre par jour pour l'accueil
+  const activeH=activeHourKeys();
+  if(activeH.length>0){
+    const doneCount=activeH.filter(k=>isDone('agpeya_'+k)).length;
+    addLabel('Agpeya');
+    el.appendChild(makeSecCard('agpeya','Agpeya — heures canoniques',activeH.length+' heure'+(activeH.length>1?'s':''),doneCount,activeH.length,'#FEF3C7','#D97706','ti-sun'));
+  }
+
+  // Lectionnaire
+  // Pour l'accueil, filtrer par jour actif
+  const _todayFr=getDayFr(currentDate);
+  const lectSections=getLectSections().filter(s=>{
+    const p=prefs[s.prefKey];
+    if(!p||!p.days)return true;
+    return p.days.includes(_todayFr);
+  });
+  if(lectSections.length>0){
+    const doneCount=lectSections.filter(s=>s.items.every((_,i)=>isDone('lect_'+s.key+'_'+i))).length;
+    addLabel('Lectionnaire');
+    el.appendChild(makeSecCard('lect','Lectionnaire du jour',lectSections.length+' section'+(lectSections.length>1?'s':''),doneCount,lectSections.length,'#DBEAFE','#1E40AF','ti-book-2'));
+  }
+
+  // Synaxaire
+  if(isActiveToday('synax')){
+    const saints=synaxData?synaxData[getKey()]||[]:[];
+    const doneCount=saints.filter((_,i)=>isDone('synax_'+i)).length;
+    addLabel('Synaxaire');
+    el.appendChild(makeSecCard('synax','Saints du jour',saints.length?(saints.length+' commémoration'+(saints.length>1?'s':'')):'Chargement…',doneCount,saints.length,'#EDE9FE','#5B21B6','ti-star'));
+  }
+
+  if(!activeH.length&&!lectSections.length&&!prefs.synax){
+    const empty=document.createElement('div');
+    empty.style.cssText='padding:40px 20px;text-align:center;color:var(--t3)';
+    empty.innerHTML='<i class="ti ti-settings" style="font-size:40px;display:block;margin-bottom:12px;opacity:.4"></i><div style="font-size:15px;font-weight:600;margin-bottom:6px">Rien à afficher</div><div style="font-size:13px">Active du contenu dans Paramètres</div>';
+    el.appendChild(empty);
+  }
+  checkConfessionReminder();
+}
+
+function makeSecCard(section,title,sub,done,total,bg,ic,icon){
+  const card=document.createElement('div');card.className='sec-card';
+  const pct=total>0?Math.round(done/total*100):0;
+  const allDone=total>0&&done>=total;
+  card.innerHTML=`
+    <div class="sec-card-hdr">
+      <div class="sec-card-ico" style="background:${bg}"><i class="ti ${icon}" style="font-size:22px;color:${ic}"></i></div>
+      <div style="flex:1">
+        <div class="sec-card-title">${title}</div>
+        <div class="sec-card-sub">${sub}</div>
+      </div>
+      <span class="sec-card-badge ${allDone?'badge-done':'badge-todo'}">${allDone?'✓ Fait':done+'/'+total}</span>
+    </div>
+    ${total>0?`<div class="sec-card-prog"><div class="sec-card-fill" style="width:${pct}%"></div></div>`:''}`;
+  card.onclick=()=>openSection(section);
+  return card;
+}
+
+function updateProgress(){
+  const activeH=activeHourKeys();
+  const lSecs=getLectSections();
+  let done=0,total=0;
+  activeH.forEach(k=>{if(isDone('agpeya_'+k))done++;total++;});
+  lSecs.forEach(s=>{const sAll=s.items.every((_,i)=>isDone('lect_'+s.key+'_'+i));if(sAll)done++;total++;});
+  if(isActiveToday('synax')&&synaxData){const saints=synaxData[getKey()]||[];saints.forEach((_,i)=>{if(isDone('synax_'+i))done++;total++;});}
+  document.getElementById('progTxt').textContent=done+' / '+total;
+  document.getElementById('progFill').style.width=total>0?Math.round(done/total*100)+'%':'0%';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION — liste des items
+// ═══════════════════════════════════════════════════════════════
+function openSection(section){
+  currentSection=section;
+  renderList(section);
+  document.getElementById('listScroll').scrollTop=0;
+  goTo('list');
+}
+
+function renderList(section){
+  const el=document.getElementById('listContent');
+  el.innerHTML='';
+  if(section==='agpeya') renderAgpeyaList(el);
+  else if(section==='lect') renderLectList(el);
+  else if(section==='synax') renderSynaxList(el);
+}
+
+function renderAgpeyaList(el){
+  el.innerHTML='';
+  document.getElementById('listTitle').textContent='Agpeya';
+  const activeH=activeHourKeys();
+  const ul=document.createElement('div');ul.className='items-list';
+  if(!activeH.length){
+    el.innerHTML=`<div style="padding:30px 16px;text-align:center;color:var(--t3);font-size:13px">Active des heures dans Paramètres</div>`;
+    return;
+  }
+  activeH.forEach(key=>{
+    const h=AGPEYA[key],meta=HOUR_ICO[key];
+    const done=isDone('agpeya_'+key);
+    const ps=psaumeOfDay(key,currentDate);
+    const row=document.createElement('div');
+    row.className='item-row'+(done?' done-row':'');
+    row.innerHTML=`
+      <div class="item-ico" style="background:${meta.bg}"><i class="ti ${meta.icon}" style="font-size:20px;color:${meta.ic}"></i></div>
+      <div class="item-label">
+        <div class="item-title">${h.nom}</div>
+        <div class="item-sub">${h.heure}${ps?' · '+ps.titre:''}</div>
+      </div>
+      <div class="item-check ${done?'done':''}"><i class="ti ti-check" style="font-size:12px;color:${done?'#fff':'transparent'}"></i></div>
+      <i class="ti ti-chevron-right item-chevron" style="font-size:16px"></i>`;
+    // Tap sur la coche = toggle sans ouvrir
+    row.querySelector('.item-check').onclick=e=>{
+      e.stopPropagation();
+      toggleDone('agpeya_'+key);
+      renderHome();
+      if(allSectionsComplete()||isSectionComplete('agpeya')){goHome();}
+      else{renderList('agpeya');}
+    };
+    // Tap sur la ligne = ouvrir lecture
+    row.onclick=()=>openReading('agpeya',key);
+    ul.appendChild(row);
+  });
+  el.appendChild(ul);
+}
+
+function getLectSections(){
+  const key=getKey();
+  const day=lectData?lectData[key]:null;
+  if(!day)return[];
+  const sections=[];
+
+  function addSec(secKey,prefKey,label,readings,tag,cls){
+    if(!prefs[prefKey]||!prefs[prefKey].on)return;
+    const items=[];
+    (readings||[]).forEach(r=>{
+      (r.passages||[]).forEach(p=>{
+        const ref=p.ref||'';
+        const isPs=ref.toLowerCase().includes('psaume');
+        items.push({
+          tag:tag||(isPs?'Psaume':'Évangile'),
+          cls:cls||(isPs?'tps':'tev'),
+          ref:ref.trim(),
+          intro:r.intro||r.introduction||'',
+          verses:p.verses||[],
+          conclusion:r.conclusion||''
+        });
+      });
+    });
+    if(items.length)sections.push({key:secKey,prefKey,label,items,tag,cls});
+  }
+
+  addSec('veille','lect_veille','Office de la Veille',day.veille?.psaume_evangile);
+  addSec('matin','lect_matin','Office du Matin',day.matin?.psaume_evangile);
+  addSec('paul','lect_paul','Épître de Saint Paul',day.messe?.paul,'Paul','tep');
+  addSec('catholique','lect_cath','Épître universelle',day.messe?.catholique,'Épître','tca');
+  addSec('actes','lect_actes','Actes des Apôtres',day.messe?.actes,'Actes','tac');
+  addSec('mpe','lect_mpe','Psaume & Évangile — Messe',day.messe?.psaume_evangile);
+  return sections;
+}
+function renderLectList(el){
+  el.innerHTML='';
+  document.getElementById('listTitle').textContent='Lectionnaire';
+  const _fr=getDayFr(currentDate);
+  const sections=getLectSections().filter(s=>{
+    const p=prefs[s.prefKey];
+    return !p||!p.days||p.days.includes(_fr);
+  });
+  if(!sections.length){
+    el.innerHTML=`<div style="padding:40px 20px;text-align:center;color:var(--t3);font-size:14px">Lectures non disponibles pour cette date</div>`;
+    return;
+  }
+  sections.forEach(sec=>{
+    // En-tête de section
+    const hdr=document.createElement('div');
+    hdr.style.cssText='padding:14px 16px 6px;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.09em';
+    hdr.textContent=sec.label;
+    el.appendChild(hdr);
+    const ul=document.createElement('div');ul.className='items-list';
+    sec.items.forEach((item,idx)=>{
+      const doneKey='lect_'+sec.key+'_'+idx;
+      const done=isDone(doneKey);
+      const row=document.createElement('div');
+      row.className='item-row'+(done?' done-row':'');
+      row.innerHTML=`
+        <div style="width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:${done?'var(--g1)':'var(--card2)'}">
+          <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:${item.cls==='tep'?'#DBEAFE':item.cls==='tca'?'#FCE7F3':item.cls==='tac'?'#FEF3C7':item.cls==='tps'?'#EDE9FE':'#D1FAE5'};color:${item.cls==='tep'?'#1E40AF':item.cls==='tca'?'#9D174D':item.cls==='tac'?'#92400E':item.cls==='tps'?'#5B21B6':'#065F46'}">${item.tag}</span>
+        </div>
+        <div class="item-label">
+          <div class="item-title" style="font-size:13px">${item.ref}</div>
+        </div>
+        <div class="item-check ${done?'done':''}"><i class="ti ti-check" style="font-size:12px;color:${done?'#fff':'transparent'}"></i></div>
+        <i class="ti ti-chevron-right item-chevron" style="font-size:16px"></i>`;
+      row.querySelector('.item-check').onclick=e=>{
+        e.stopPropagation();
+        toggleDone(doneKey);
+        renderHome();
+        if(allSectionsComplete()||isSectionComplete('lect')){goHome();}
+        else{renderList('lect');}
+      };
+      row.onclick=()=>openReading('lect',sec.key+'_'+idx,{section:sec,item,itemIdx:idx});
+      ul.appendChild(row);
+    });
+    el.appendChild(ul);
+  });
+}
+
+function renderSynaxList(el){
+  el.innerHTML='';
+  document.getElementById('listTitle').textContent='Synaxaire';
+  const key=getKey();
+  const saints=synaxData?synaxData[key]||[]:[];
+  if(!saints.length){
+    el.innerHTML=`<div style="padding:40px 20px;text-align:center;color:var(--t3);font-size:14px">Aucune commémoration pour ce jour</div>`;
+    return;
+  }
+  const ul=document.createElement('div');ul.className='items-list';
+  saints.forEach((saint,idx)=>{
+    const doneKey='synax_'+idx;
+    const done=isDone(doneKey);
+    const row=document.createElement('div');
+    row.className='item-row'+(done?' done-row':'');
+    row.innerHTML=`
+      <div style="width:38px;height:38px;border-radius:50%;background:var(--g1);border:0.5px solid var(--g2);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--g)">
+        <i class="ti ti-crown" style="font-size:18px"></i>
+      </div>
+      <div class="item-label">
+        <div class="item-title" style="font-size:13px;line-height:1.4">${saint.titre}</div>
+      </div>
+      <div class="item-check ${done?'done':''}"><i class="ti ti-check" style="font-size:12px;color:${done?'#fff':'transparent'}"></i></div>
+      <i class="ti ti-chevron-right item-chevron" style="font-size:16px"></i>`;
+    row.querySelector('.item-check').onclick=e=>{
+      e.stopPropagation();
+      toggleDone(doneKey);
+      renderHome();
+      if(allSectionsComplete()||isSectionComplete('synax')){goHome();}
+      else{renderList('synax');}
+    };
+    row.onclick=()=>openReading('synax',idx);
+    ul.appendChild(row);
+  });
+  el.appendChild(ul);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LECTURE — plein écran
+// ═══════════════════════════════════════════════════════════════
+function openReading(section,key,extra){
+  currentSection=section;
+  currentItemKey=section+'_'+key;
+  buildReadingScreen(section,key,extra);
+  document.getElementById('readingScroll').scrollTop=0;
+  goTo('reading');
+}
+
+function buildReadingScreen(section,key,extra){
+  updateReadingCheckUI();
+  const body=document.getElementById('readingBody');
+  body.innerHTML='';
+
+  if(section==='agpeya'){
+    const h=AGPEYA[key];
+    document.getElementById('readingTitle').textContent=h.nom+' — '+h.heure;
+
+    // ── Commémoration ────────────────────────────────────────────
+    const comm=document.createElement('div');
+    comm.className='reading-comm';
+    comm.textContent=h.commemoration;
+    body.appendChild(comm);
+
+    // ── Introduction ─────────────────────────────────────────────
+    addReadingBlock(body,'Introduction',
+      'Levons-nous, prosternons-nous et prions le Christ notre Dieu.\n'+
+      'Levons-nous, prosternons-nous et implorons le Christ notre Roi.\n'+
+      'Levons-nous, prosternons-nous et implorons le Christ notre Sauveur.\n\n'+
+      'Ô notre Seigneur Jésus-Christ, Verbe de Dieu, par les intercessions de sainte Marie et de tous Tes saints, garde-nous. Que nous entamions bien la journée. Aie pitié de nous selon Ta volonté pour toujours.');
+
+    // ── Psaume du jour ────────────────────────────────────────────
+    const ps=psaumeOfDay(key,currentDate);
+    if(ps){
+      const h2=AGPEYA[key];
+      const idx2=h2.psaumes.indexOf(ps);
+      const titre=ps.titre+' ('+String(idx2+1)+'/'+h2.psaumes.length+')';
+      addReadingBlock(body,titre,ps.texte);
+    }
+
+    // ── Évangile ──────────────────────────────────────────────────
+    if(h.evangile){
+      addReadingBlock(body,'Évangile — '+h.evangile.reference,h.evangile.texte);
+    }
+
+    // ── Trisagion ─────────────────────────────────────────────────
+    addReadingBlock(body,'Le Trisagion',
+      'Dieu Saint, Saint fort, Saint immortel, né de la Vierge, aie pitié de nous.\n'+
+      'Dieu Saint, Saint fort, Saint immortel, crucifié pour nous, aie pitié de nous.\n'+
+      'Dieu Saint, Saint fort, Saint immortel, ressuscité d\'entre les morts et monté aux cieux, aie pitié de nous.\n\n'+
+      'Gloire au Père, au Fils et au Saint Esprit, maintenant et toujours et dans les siècles des siècles. Amen !\n\n'+
+      'Seigneur pardonne-nous nos péchés.\nSeigneur pardonne-nous nos iniquités.\nSeigneur pardonne-nous nos erreurs.\n\n'+
+      'Visite Seigneur les malades de ton peuple, guéris-les à cause de ton saint Nom.\nÀ nos pères et à nos frères qui se sont endormis, accorde Seigneur le repos de leurs âmes.\nÔ Toi qui es sans péché, Seigneur aie pitié de nous.\n\n'+
+      'Car à Toi sont dues la gloire, la magnificence et la sanctification trinitaire.\nPitié Seigneur, pitié Seigneur, Seigneur bénis-nous. Amen !');
+
+    // ── Notre Père ────────────────────────────────────────────────
+    addReadingBlock(body,'Notre Père',
+      'Rends-nous dignes de dire en action de grâce :\n\n'+
+      'Notre Père, qui es aux cieux,\n'+
+      'Que Ton Nom soit sanctifié,\n'+
+      'Que Ton règne vienne,\n'+
+      'Que Ta volonté soit faite sur la terre comme au ciel.\n'+
+      'Donne-nous aujourd\'hui notre pain de ce jour.\n'+
+      'Pardonne-nous nos offenses comme nous pardonnons aussi à ceux qui nous ont offensés.\n'+
+      'Et ne nous soumets pas à la tentation,\n'+
+      'Mais délivre-nous du mal.\n'+
+      'Par le Christ Jésus Notre Seigneur.\n'+
+      'Car c\'est à Toi qu\'appartiennent le règne, la puissance et la gloire éternellement. Amen !');
+
+    // ── Absolution (propre à chaque heure) ───────────────────────
+    const absolutions={
+      prime:
+        'Ô Lumière véritable qui éclaires tout homme venu en ce monde, Tu es venu dans le monde à cause de Ton amour pour les hommes et toute la création s\'est réjouie par Ton avènement. Tu as sauvé notre père Adam du gouffre. Tu as libéré notre mère Ève des douleurs de la mort. Tu nous as donné l\'esprit filial. Nous Te louons et nous Te bénissons.\n\n'+
+        'Gloire au Père, au Fils et au Saint Esprit.\n\n'+
+        'Lorsque le jour se lève, ô Christ notre Dieu, la vraie Lumière, fais que nos sens et nos pensées deviennent lumineuses et que l\'obscurité de la douleur s\'éloigne de nous. Dans Ta grande miséricorde écoute nos voix. Sauve-nous ô Seigneur notre Dieu par Ta tendresse.\n\n'+
+        'Maintenant et toujours et pour les siècles des siècles. Amen !',
+      tierce:
+        'Ô Dieu de toute compassion et Seigneur de toute consolation, qui nous as consolés en tout temps par Ton Esprit-Saint, nous Te rendons grâce car Tu nous as relevés pour prier en cette heure sainte où Tu as répandu généreusement la grâce de Ton Esprit-Saint sur Tes saints apôtres sous forme de langues de feu.\n\n'+
+        'Nous T\'invoquons et Te supplions ô Ami du genre humain, d\'agréer nos prières. Remets nos péchés. Envoie sur nous la grâce de Ton Esprit-Saint. Purifie-nous de toutes les souillures du corps et de l\'esprit. Guide-nous vers une conduite spirituelle afin que nous vivions par l\'esprit.\n\n'+
+        'Car à Toi sont dues la gloire, l\'honneur et la magnificence avec Ton Père très bon et le Saint-Esprit, maintenant, toujours et à jamais. Amen !',
+      sexte:
+        'Ô Seigneur Jésus Christ, Fils unique du Père, Toi qui as sanctifié cette sixième heure par Ton honorable et vivifiant crucifiement, fais mourir en nous nos passions charnelles et accorde-nous de passer le reste de nos journées dans la paix et le repentir.\n\n'+
+        'Car Tu es béni éternellement avec Ton Père très bon et le Saint-Esprit vivifiant et consubstantiel, maintenant et toujours et dans les siècles des siècles. Amen !',
+      none:
+        'Ô Seigneur Jésus Christ, notre Dieu, qui à la neuvième heure as accepté la mort dans Ta chair en notre faveur pour nous arracher aux chaînes de la mort. Nous Te supplions de nous pardonner toutes nos offenses volontaires et involontaires.\n\n'+
+        'Car Tu es béni maintenant, toujours et dans les siècles des siècles. Amen !',
+      vepres:
+        'Ô Dieu grand et Éternel, Toi qui es sans commencement et sans fin, Toi le Créateur des lumières. Tu as illuminé le jour de Ta lumière et Tu as préparé la nuit pour le repos de l\'homme dont Tu as créé la faiblesse. Reçois, ô notre Maître, les prières du soir de Ta faible créature.\n\n'+
+        'Accorde-nous une nuit paisible et une nuit sans péché. Éclaire les yeux de nos cœurs afin que nous ne nous endormions pas dans la mort. Donne à tous ceux qui sont soumis à Ta grâce le Salut.\n\n'+
+        'Car Tu es béni éternellement. Amen !',
+      complies:
+        'Ô Seigneur notre Dieu, Tu es Saint et Tu accordes Ta grâce aux humbles. Exauce notre prière de ce soir. Conduis-nous à Toi sains et saufs. Pardonne-nous nos péchés intentionnels et non-intentionnels.\n\n'+
+        'Reçois nos âmes en paix. Ne nous juge pas selon nos péchés mais selon Ta grande miséricorde, afin qu\'en Te glorifiant et en Te bénissant nous soyons exaucés à l\'heure de notre mort, par Jésus-Christ Notre Seigneur, avec qui Tu es béni, Toi et le Saint-Esprit, maintenant et toujours et dans les siècles des siècles. Amen !',
+      minuit:
+        'Ô Dieu notre Sauveur, espoir de tous les endroits de la terre, de ceux qui sont au loin sur la mer. Sois indulgent et miséricordieux envers nous dans cette heure de la nuit. Reçois nos supplications. Renouvelle en nous Ton Esprit de droiture. Raffermis-nous par Ton Esprit souverain.\n\n'+
+        'Afin que nous Te glorifiions et que nous Te rendions grâce pour tous les bienfaits que Tu nous accordes en toute circonstance. Car Tu es béni éternellement avec Ton Fils unique et le Saint-Esprit vivifiant et consubstantiel, maintenant et toujours et dans les siècles des siècles. Amen !'
+    };
+    addReadingBlock(body,'Absolution',absolutions[key]||'');
+
+    // ── Conclusion de chaque heure ────────────────────────────────
+    addReadingBlock(body,'Conclusion',
+      'Pitié pour nous ô Dieu, pitié pour nous. Toi qui es adoré et glorifié, en tout temps et à chaque heure, dans le ciel et sur la terre. Ô Christ notre Dieu bon, plein de patience, de miséricorde et de tendresse, Toi qui aimes les hommes justes et qui as pitié des pécheurs dont je suis le premier. Tu ne veux pas la mort du pécheur mais qu\'il revienne à Toi et vive.\n\n'+
+      'Ô Seigneur, reçois de nous nos supplications en cette heure et en toute heure, facilite notre vie, conduis-nous pour agir selon Tes commandements. Sanctifie nos esprits. Purifie nos corps. Donne-nous des pensées droites. Purifie nos intentions. Guéris-nous et remets nos péchés.\n\n'+
+      'Délivre-nous de toute tristesse et de toute douleur. Entoure-nous de Tes saints anges, afin que nous soyons par leur force protégés et guidés. Ainsi nous arriverons à l\'unité de la Foi et à la connaissance de Ta gloire indicible. Car Tu es béni éternellement. Amen !');
+
+  } else if(section==='lect'){
+    const {section:sec,item,itemIdx}=extra;
+    document.getElementById('readingTitle').textContent=item.ref;
+    if(item.intro&&item.intro.length>5){
+      const intro=document.createElement('div');intro.className='reading-comm';intro.textContent=item.intro.slice(0,200);body.appendChild(intro);
+    }
+    const ref=document.createElement('div');ref.className='reading-ref';ref.textContent=item.ref;body.appendChild(ref);
+    const vers=document.createElement('div');vers.className='reading-verset';
+    item.verses.forEach(v=>{
+      const p=document.createElement('p');
+      p.innerHTML=`<span class="vnum">${v.number||v.num}</span>${v.text}`;
+      vers.appendChild(p);
+    });
+    body.appendChild(vers);
+    if(item.conclusion&&item.conclusion.length>5){
+      const concl=document.createElement('div');concl.className='reading-concl';concl.textContent=item.conclusion;body.appendChild(concl);
+    }
+
+  } else if(section==='synax'){
+    const saints=synaxData?synaxData[getKey()]||[]:[];
+    const saint=saints[key];
+    if(!saint)return;
+    document.getElementById('readingTitle').textContent='Saint du jour';
+    const name=document.createElement('div');name.className='reading-comm';name.textContent=saint.titre;body.appendChild(name);
+    saint.texte.split('\n\n').forEach(para=>{
+      const d=document.createElement('div');d.className='reading-text';d.style.marginBottom='16px';d.textContent=para;body.appendChild(d);
+    });
+  }
+}
+function addReadingBlock(body,titre,texte){
+  const sep=document.createElement('div');
+  sep.style.cssText='margin:20px 0 0;padding-top:16px;border-top:0.5px solid var(--sep)';
+  const t=document.createElement('div');t.className='reading-step-title';t.textContent=titre;
+  const tx=document.createElement('div');tx.className='reading-text';tx.style.marginTop='8px';tx.textContent=texte;
+  sep.appendChild(t);sep.appendChild(tx);body.appendChild(sep);
+}
+function addReadingStep(body,titre,texte){
+  const title=document.createElement('div');title.className='reading-step-title';title.style.marginTop='16px';title.textContent=titre;body.appendChild(title);
+  const txt=document.createElement('div');txt.className='reading-text';txt.textContent=texte;body.appendChild(txt);
+}
+
+function updateReadingCheckUI(){
+  const done=isDone(currentItemKey);
+  const btn=document.getElementById('doneCta');
+  const chk=document.getElementById('readingCheck');
+  const chkIco=document.getElementById('readingCheckIcon');
+  btn.className='done-btn '+(done?'done':'undone');
+  document.getElementById('doneCtaLabel').textContent=done?'Marquer comme non lu':'Marquer comme lu';
+  chk.className='topbar-check'+(done?' done':'');
+  chkIco.style.color=done?'#fff':'transparent';
+}
+
+function allSectionsComplete(){
+  const activeH=activeHourKeys();
+  if(activeH.some(k=>!isDone('agpeya_'+k)))return false;
+  const fr=getDayFr(currentDate);
+  const lSecs=getLectSections().filter(s=>{const p=prefs[s.prefKey];return!p||!p.days||p.days.includes(fr);});
+  if(lSecs.some(s=>s.items.some((_,i)=>!isDone('lect_'+s.key+'_'+i))))return false;
+  if(isActiveToday('synax')&&synaxData){const saints=synaxData[getKey()]||[];if(saints.some((_,i)=>!isDone('synax_'+i)))return false;}
+  return true;
+}
+function isSectionComplete(section){
+  if(section==='agpeya'){return activeHourKeys().every(k=>isDone('agpeya_'+k));}
+  if(section==='lect'){const fr=getDayFr(currentDate);return getLectSections().filter(s=>{const p=prefs[s.prefKey];return!p||!p.days||p.days.includes(fr);}).every(s=>s.items.every((_,i)=>isDone('lect_'+s.key+'_'+i)));}
+  if(section==='synax'){const saints=synaxData?synaxData[getKey()]||[]:[];return saints.every((_,i)=>isDone('synax_'+i));}
+  return true;
+}
+function toggleCurrentDone(){
+  const wasDone=isDone(currentItemKey);
+  setDone(currentItemKey,!wasDone);
+  updateReadingCheckUI();
+  renderHome();
+  if(!wasDone){
+    toast('Lecture marquée ✓');
+    setTimeout(()=>{
+      if(allSectionsComplete()||isSectionComplete(currentSection)){goHome();}
+      else{
+        // Retour à la liste : dépiler reading et afficher list
+        if(screenStack[screenStack.length-1]==='reading')screenStack.pop();
+        const prev=document.getElementById('screen-reading');
+        if(prev)prev.classList.add('offright');
+        const listEl=document.getElementById('screen-list');
+        if(listEl){listEl.classList.remove('offright','offleft');}
+        renderList(currentSection);
+      }
+    },600);
+  } else {
+    toast('Retiré des lectures faites');
+  }
+}
+
+function toggleDone(key){
+  setDone(key,!isDone(key));
+  updateProgress();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PARAMÈTRES
+// ═══════════════════════════════════════════════════════════════
+const PROG_SECTIONS={
+  'agpeya-pcard':[
+    {prefKey:'agpeya_prime',ico:'ti-sun',bg:'#FEF3C7',ic:'#D97706',name:'Prime',sub:'6h00'},
+    {prefKey:'agpeya_tierce',ico:'ti-sun-high',bg:'#FEF9EC',ic:'#B45309',name:'Tierce',sub:'9h00'},
+    {prefKey:'agpeya_sexte',ico:'ti-sun-filled',bg:'#FFF7ED',ic:'#EA580C',name:'Sexte',sub:'12h00'},
+    {prefKey:'agpeya_none',ico:'ti-cloud-sun',bg:'#F0F9FF',ic:'#0284C7',name:'None',sub:'15h00'},
+    {prefKey:'agpeya_vepres',ico:'ti-sunset-2',bg:'#FDF4FF',ic:'#9333EA',name:'Vêpres',sub:'18h00'},
+    {prefKey:'agpeya_complies',ico:'ti-moon',bg:'#F5F3FF',ic:'#7C3AED',name:'Complies',sub:'21h00'},
+    {prefKey:'agpeya_minuit',ico:'ti-moon-stars',bg:'#EFF6FF',ic:'#2563EB',name:'Minuit',sub:'0h00'},
+  ],
+  'lect-pcard':[
+    {prefKey:'lect_veille',ico:'ti-moon',bg:'#FEF9EC',ic:'#B45309',name:'Office de la Veille',sub:''},
+    {prefKey:'lect_matin',ico:'ti-sun',bg:'#FEF3C7',ic:'#D97706',name:'Office du Matin',sub:''},
+    {prefKey:'lect_paul',ico:'ti-book',bg:'#DBEAFE',ic:'#1E40AF',name:'Épître de Saint Paul',sub:''},
+    {prefKey:'lect_cath',ico:'ti-book-2',bg:'#FCE7F3',ic:'#9D174D',name:'Épître universelle',sub:''},
+    {prefKey:'lect_actes',ico:'ti-users',bg:'#FEF3C7',ic:'#92400E',name:'Actes des Apôtres',sub:''},
+    {prefKey:'lect_mpe',ico:'ti-bible',bg:'#D1FAE5',ic:'#065F46',name:'Psaume & Évangile — Messe',sub:''},
+  ],
+  'autres-pcard':[
+    {prefKey:'synax',ico:'ti-star',bg:'#EDE9FE',ic:'#5B21B6',name:'Synaxaire',sub:'Saints du jour'},
+  ],
+};
+function buildParams(){
+  const DAYS_SHORT=['L','M','M','J','V','S','D'];
+  const DAYS_FULL=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+  const todayFr=(new Date().getDay()+6)%7;
+
+  function daysPreview(days){
+    if(days.length===7)return'Tous les jours';
+    if(days.length===0)return'Aucun jour';
+    if(JSON.stringify(days)===JSON.stringify([0,1,2,3,4]))return'Lun → Ven';
+    if(JSON.stringify(days)===JSON.stringify([5,6]))return'Sam & Dim';
+    return days.map(d=>DAYS_SHORT[d]).join(' · ');
+  }
+  function getActiveShortcut(days){
+    if(days.length===7)return'Tous';
+    if(JSON.stringify(days)===JSON.stringify([0,1,2,3,4]))return'Semaine';
+    if(JSON.stringify(days)===JSON.stringify([5,6]))return'Week-end';
+    return null;
+  }
+
+  function buildItemCard(containerId,items){
+    const container=document.getElementById(containerId);
+    if(!container)return;
+    items.forEach(item=>{
+      const p=prefs[item.prefKey];
+      const card=document.createElement('div');card.className='item-card';
+
+      // Header
+      const hdr=document.createElement('div');hdr.className='item-hdr';
+      hdr.innerHTML=`
+        <div class="item-ico" style="background:${item.bg}"><i class="ti ${item.ico}" style="font-size:15px;color:${item.ic}"></i></div>
+        <div class="item-lbl">
+          <div style="font-size:13px;font-weight:600;color:var(--t1)">${item.name}${item.sub?` <span style="font-size:11px;color:var(--t3);font-weight:400">· ${item.sub}</span>`:''}</div>
+          <div class="item-days-preview" id="prev_${item.prefKey}">${p.on?daysPreview(p.days):'Masqué'}</div>
+        </div>
+        <button class="tog ${p.on?'on':''}" id="tog_${item.prefKey}"></button>
+        <i class="ti ti-chevron-down" id="chev_${item.prefKey}" style="font-size:13px;color:var(--t3);margin-left:6px"></i>`;
+
+      hdr.querySelector('.tog').addEventListener('click',e=>{
+        e.stopPropagation();
+        p.on=!p.on;
+        hdr.querySelector('.tog').classList.toggle('on',p.on);
+        document.getElementById('prev_'+item.prefKey).textContent=p.on?daysPreview(p.days):'Masqué';
+        savePrefs();renderHome();
+      });
+      hdr.onclick=()=>toggleDaysPanel(item.prefKey,card);
+      card.appendChild(hdr);
+
+      // Panel jours
+      const panel=document.createElement('div');panel.className='days-panel';panel.style.display='none';
+      const lbl=document.createElement('div');lbl.className='days-label';lbl.textContent='Afficher ces jours-là';panel.appendChild(lbl);
+
+      const grid=document.createElement('div');grid.className='days-grid';
+      DAYS_SHORT.forEach((d,i)=>{
+        const btn=document.createElement('button');
+        btn.className='day-btn'+(p.days.includes(i)?' on':'')+(i===todayFr?' today':'');
+        btn.textContent=d;btn.title=DAYS_FULL[i];
+        btn.onclick=e=>{
+          e.stopPropagation();
+          if(p.days.includes(i))p.days=p.days.filter(x=>x!==i);
+          else p.days=[...p.days,i].sort();
+          btn.classList.toggle('on',p.days.includes(i));
+          document.getElementById('prev_'+item.prefKey).textContent=p.on?daysPreview(p.days):'Masqué';
+          updateShortcuts(sc,p.days,grid,getActiveShortcut);
+          savePrefs();renderHome();
+        };
+        grid.appendChild(btn);
+      });
+      panel.appendChild(grid);
+
+      const sc=document.createElement('div');sc.className='days-shortcuts';
+      [['Tous',[0,1,2,3,4,5,6]],['Semaine',[0,1,2,3,4]],['Week-end',[5,6]]].forEach(([label,days])=>{
+        const b=document.createElement('div');
+        b.className='shortcut-btn'+(getActiveShortcut(p.days)===label?' active-sc':'');
+        b.textContent=label;
+        b.onclick=e=>{
+          e.stopPropagation();
+          p.days=[...days];
+          grid.querySelectorAll('.day-btn').forEach((btn,i)=>btn.classList.toggle('on',days.includes(i)));
+          updateShortcuts(sc,p.days,grid,getActiveShortcut);
+          document.getElementById('prev_'+item.prefKey).textContent=p.on?daysPreview(p.days):'Masqué';
+          savePrefs();renderHome();
+        };
+        sc.appendChild(b);
+      });
+      panel.appendChild(sc);
+      card.appendChild(panel);
+      container.appendChild(card);
+    });
+  }
+
+  function toggleDaysPanel(key,card){
+    document.querySelectorAll('.days-panel').forEach(p=>p.style.display='none');
+    document.querySelectorAll('[id^="chev_"]').forEach(c=>c.className='ti ti-chevron-down');
+    const panel=card.querySelector('.days-panel');
+    const chev=card.querySelector('[id^="chev_"]');
+    const isOpen=panel.style.display!=='none';
+    if(!isOpen){panel.style.display='block';chev.className='ti ti-chevron-up';panel.scrollIntoView({behavior:'smooth',block:'nearest'});}
+  }
+
+  function updateShortcuts(sc,days,grid,getActiveShortcut){
+    sc.querySelectorAll('.shortcut-btn').forEach(b=>b.classList.toggle('active-sc',b.textContent===getActiveShortcut(days)));
+  }
+
+  const PROG_SECTIONS={
+    'agpeya-pcard':[
+      {prefKey:'agpeya_prime',   ico:'ti-sun',        bg:'#FEF3C7',ic:'#D97706',name:'Prime',    sub:'6h00'},
+      {prefKey:'agpeya_tierce',  ico:'ti-sun-high',   bg:'#FEF9EC',ic:'#B45309',name:'Tierce',   sub:'9h00'},
+      {prefKey:'agpeya_sexte',   ico:'ti-sun-filled', bg:'#FFF7ED',ic:'#EA580C',name:'Sexte',    sub:'12h00'},
+      {prefKey:'agpeya_none',    ico:'ti-cloud-sun',  bg:'#F0F9FF',ic:'#0284C7',name:'None',     sub:'15h00'},
+      {prefKey:'agpeya_vepres',  ico:'ti-sunset-2',   bg:'#FDF4FF',ic:'#9333EA',name:'Vêpres',   sub:'18h00'},
+      {prefKey:'agpeya_complies',ico:'ti-moon',       bg:'#F5F3FF',ic:'#7C3AED',name:'Complies', sub:'21h00'},
+      {prefKey:'agpeya_minuit',  ico:'ti-moon-stars', bg:'#EFF6FF',ic:'#2563EB',name:'Minuit',   sub:'0h00'},
+    ],
+    'lect-pcard':[
+      {prefKey:'lect_veille',ico:'ti-moon',  bg:'#FEF9EC',ic:'#B45309',name:'Office de la Veille',sub:''},
+      {prefKey:'lect_matin', ico:'ti-sun',   bg:'#FEF3C7',ic:'#D97706',name:'Office du Matin',    sub:''},
+      {prefKey:'lect_paul',  ico:'ti-book',  bg:'#DBEAFE',ic:'#1E40AF',name:'Épître de Saint Paul',sub:''},
+      {prefKey:'lect_cath',  ico:'ti-book-2',bg:'#FCE7F3',ic:'#9D174D',name:'Épître universelle',  sub:''},
+      {prefKey:'lect_actes', ico:'ti-users', bg:'#FEF3C7',ic:'#92400E',name:'Actes des Apôtres',   sub:''},
+      {prefKey:'lect_mpe',   ico:'ti-bible', bg:'#D1FAE5',ic:'#065F46',name:'Psaume & Évangile',   sub:''},
+    ],
+    'autres-pcard':[
+      {prefKey:'synax',ico:'ti-star',bg:'#EDE9FE',ic:'#5B21B6',name:'Synaxaire',sub:'Saints du jour'},
+    ],
+  };
+  Object.entries(PROG_SECTIONS).forEach(([id,items])=>buildItemCard(id,items));
+
+  // Init confession
+  if(confLastDate)document.getElementById('lastConfDate').value=confLastDate;
+  document.getElementById('freqVal').textContent=confFreq;
+  document.getElementById('freqSub').textContent=confFreq===1?'Chaque semaine':'Toutes les '+confFreq+' semaines';
+  if(!confActive)document.getElementById('confTog').classList.remove('on');
+  updateConf();
+}
+
+// Confession
+function changeFreq(delta){
+  confFreq=Math.max(1,Math.min(12,confFreq+delta));
+  document.getElementById('freqVal').textContent=confFreq;
+  document.getElementById('freqSub').textContent=confFreq===1?'Chaque semaine':'Toutes les '+confFreq+' semaines';
+  savePrefs();updateConf();
+}
+function updateConf(){
+  // Supprimer l'ancienne bannière pour la recalculer
+  const old=document.getElementById('confReminderBanner');
+  if(old)old.remove();
+  const dateEl=document.getElementById('lastConfDate');
+  const togEl=document.getElementById('confTog');
+  if(!dateEl||!togEl)return;
+  confLastDate=dateEl.value;
+  confActive=togEl.classList.contains('on');
+  savePrefs();
+  const el=document.getElementById('nextConfDate');
+  const elDays=document.getElementById('nextConfDays');
+  if(!el)return;
+  if(!confLastDate||!confActive){
+    el.textContent=confActive?'Définis ta dernière confession':'Rappel désactivé';
+    elDays.textContent='';return;
+  }
+  const last=new Date(confLastDate);
+  const next=new Date(last);next.setDate(next.getDate()+confFreq*7);
+  const today=new Date();today.setHours(0,0,0,0);
+  const diff=Math.round((next-today)/86400000);
+  el.textContent=next.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+  elDays.textContent=diff<0?'En retard de '+Math.abs(diff)+' jour'+(Math.abs(diff)>1?'s':''):diff===0?"C'est aujourd'hui !":'Dans '+diff+' jour'+(diff>1?'s':'');
+  checkConfessionReminder();
+}
+function showInstallBanner(){
+  if(localStorage.getItem('k_install_dismissed'))return;
+  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isAndroid=/Android/.test(navigator.userAgent);
+  if(window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone)return;
+  const wrap=document.getElementById('todayReturnWrap');
+  const banner=document.createElement('div');
+  banner.style.cssText='margin:0 14px 10px;background:var(--g1);border:0.5px solid var(--g2);border-radius:16px;padding:14px 16px';
+  if(isIOS){
+    banner.innerHTML=`<div style="display:flex;align-items:flex-start;gap:12px">
+      <div style="width:40px;height:40px;border-radius:12px;background:var(--g);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:20px"><i class="ti ti-device-mobile"></i></div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--gd);margin-bottom:4px">Installer sur l'écran d'accueil</div>
+        <div style="font-size:12px;color:var(--g);line-height:1.6">1. Appuie sur <strong>⎙ Partager</strong><br>2. Puis <strong>Sur l'écran d'accueil</strong></div>
+      </div>
+      <button onclick="this.parentElement.parentElement.remove();localStorage.setItem('k_install_dismissed','1')" style="background:none;border:none;color:var(--g);cursor:pointer;font-size:18px">×</button>
+    </div>`;
+  } else if(isAndroid){
+    banner.innerHTML=`<div style="display:flex;align-items:flex-start;gap:12px">
+      <div style="width:40px;height:40px;border-radius:12px;background:var(--g);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:20px"><i class="ti ti-device-mobile"></i></div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--gd);margin-bottom:4px">Installer sur l'écran d'accueil</div>
+        <div style="font-size:12px;color:var(--g);line-height:1.6">1. Menu <strong>⋮</strong> du navigateur<br>2. <strong>Ajouter à l'écran d'accueil</strong></div>
+      </div>
+      <button onclick="this.parentElement.parentElement.remove();localStorage.setItem('k_install_dismissed','1')" style="background:none;border:none;color:var(--g);cursor:pointer;font-size:18px">×</button>
+    </div>`;
+  }
+  if(isIOS||isAndroid)wrap.appendChild(banner);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(reg=>{
+    reg.addEventListener('updatefound',()=>{
+      const nw=reg.installing;
+      nw.addEventListener('statechange',()=>{
+        if(nw.state==='installed'&&navigator.serviceWorker.controller){
+          // Nouvelle version disponible → recharger automatiquement
+          nw.postMessage('skipWaiting');
+          navigator.serviceWorker.addEventListener('controllerchange',()=>{
+            window.location.reload();
+          });
+        }
+      });
+    });
+  }).catch(()=>{});
+}
+// Desktop : afficher sidebar si grand écran
+if(window.innerWidth>=768){
+  const sb=document.getElementById('desktopSidebar');
+  const dr=document.getElementById('desktopRight');
+  if(sb)sb.style.display='';
+  if(dr)dr.style.display='';
+  const gn=document.getElementById('globalNav');
+  if(gn)gn.style.display='none';
+}
+loadPrefs();loadDone();
+updateDateDisplay();
+buildParams();
+renderHome();
+showInstallBanner();
+loadData();
+checkConfessionReminder();
+
+
+function checkConfessionReminder(){
+  if(!confActive||!confLastDate)return;
+  const next=new Date(confLastDate);
+  next.setDate(next.getDate()+confFreq*7);
+  const today=new Date();today.setHours(0,0,0,0);
+  const diff=Math.round((next-today)/86400000);
+  if(diff>0)return;
+  if(document.getElementById('confReminderBanner'))return;
+  const snoozed=localStorage.getItem('k_conf_snoozed');
+  if(snoozed&&new Date(snoozed)>today)return; // snoozé
+  const msg=diff===0?"C'est le moment de te confesser":("En retard de "+Math.abs(diff)+(Math.abs(diff)>1?" jours":" jour"));
+  const banner=document.createElement('div');
+  banner.style.cssText='margin:0 14px 8px;background:#FEF3C7;border:1.5px solid #D97706;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px';
+  const ico=document.createElement('div');
+  ico.style.cssText='width:36px;height:36px;border-radius:10px;background:#D97706;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff';
+  ico.innerHTML='<i class="ti ti-cross" style="font-size:18px"></i>';
+  const txt=document.createElement('div');
+  txt.style.flex='1';
+  txt.innerHTML='<div style="font-size:13px;font-weight:700;color:#92400E">Rappel confession</div><div style="font-size:12px;color:#B45309;margin-top:2px">'+msg+'</div>';
+  const btn=document.createElement('button');
+  btn.textContent='×';
+  btn.style.cssText='background:none;border:none;color:#B45309;font-size:22px;cursor:pointer';
+  btn.onclick=function(){
+    banner.remove();
+    // Stocker la prochaine date de rappel (+3 jours) pour réafficher si toujours en retard
+    const snooze=new Date(today);snooze.setDate(snooze.getDate()+3);
+    localStorage.setItem('k_conf_snoozed',snooze.toISOString().split('T')[0]);
+  };
+  banner.appendChild(ico);banner.appendChild(txt);banner.appendChild(btn);
+  const wrap=document.getElementById('todayReturnWrap');
+  banner.id='confReminderBanner';
+  if(wrap)wrap.insertAdjacentElement('afterbegin',banner);
+  // Notifications Push : à implémenter ultérieurement
+}</script>
+</body>
+</html>
